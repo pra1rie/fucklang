@@ -12,6 +12,7 @@ typedef enum value_type_e {
     TYPE_STRING,
     TYPE_ARRAY,
     TYPE_POINTER,
+    TYPE_STRUCT,
 } Type;
 
 typedef struct string_t {

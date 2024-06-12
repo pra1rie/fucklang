@@ -10,6 +10,7 @@ import fuck.core.value;
 // TODO: get command line arguments from fuck core
 // TODO: function pointers
 // TODO: call functions with dot syntax (foo.bar())
+// TODO: better runtime error messages
 
 void main(string[] args)
 {

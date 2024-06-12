@@ -1,6 +1,6 @@
 
 all:
-	dmd -of=fuck src/*.d core/*.d
+	dmd -O -of=fuck src/*.d core/*.d
 
 install: all
-	cp fuck ~/bin/
+	cp fuck /usr/local/bin/

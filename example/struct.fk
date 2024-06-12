@@ -1,0 +1,14 @@
+import "example/stdio.fk"
+
+struct Person {
+    name  // no types yet
+    age   // please forgive me
+}
+
+def person_say(person, message) {
+    println(person.name, ": ", message)
+}
+
+juan = Person("Cabrón", 69)
+person_say(juan, "<insert funny message>")
+

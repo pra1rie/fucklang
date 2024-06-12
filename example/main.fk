@@ -1,0 +1,26 @@
+
+import "example/stdio.fk"
+
+def max(a, b)
+    if (a > b) a
+    else if (a < b) b
+    else "same shit bruh"
+
+def loop(x) {
+    i = 0
+    while i < x {
+        if i == (x/2) next
+        println(i)
+        i = i + 1
+    }
+    return 69
+    println("loop end")
+}
+
+loop(6)
+println(max(69, 69))
+println(max(69, 420))
+println(max(33, 69))
+
+def add(a, b) a + b
+println(add(33 * 2, 3))

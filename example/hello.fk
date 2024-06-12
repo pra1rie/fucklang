@@ -1,6 +1,4 @@
-
 import "example/stdio.fk"
 
-println("hue")
-println(69)
+println("Hello, World!")
 

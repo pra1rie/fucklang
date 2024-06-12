@@ -1,18 +1,13 @@
-
 import "example/stdio.fk"
 
-def bruh(l)
-    println(l[0], " ", l[1])
-
 list = ["Hello", "World!"]
-bruh(list)
+println(list)
 
 list[0] = "Goodbye"
-bruh(list)
+println(list)
 
 list = append(list, "bruh")
 list = remove(list, 1)
 list = insert(list, 0, "kekw")
-
 println(list)
 

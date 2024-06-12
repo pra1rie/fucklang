@@ -92,7 +92,7 @@ bool isOperator(string s)
 {
     return [
         "(", ")", "{", "}", "[", "]",
-        ".", ",", "&", "|", "!", "=",
+        ":", ".", ",", "&", "|", "!", "=",
         ">", "<", "==", "!=", ">=", "<=",
         "+", "-", "*", "/", "&&", "||",
     ].canFind(s);
@@ -485,9 +485,14 @@ Expr parseKeywordWhile(Parser *par)
 {
     par.pos++; // skip 'while'
     Expr cond = parseExpr(par); // condition
-    Expr expr = parseExpr(par); // body
+    Expr after;
+    if (par.peek == Token(TokenType.OPERATOR, ":")) {
+        par.pos++; // skip ':'
+        after = parseExpr(par);
+    }
 
-    return new ExprWhile(cond, expr);
+    Expr expr = parseExpr(par); // body
+    return new ExprWhile(cond, expr, after);
 }
 
 Expr parseKeywordBreak(Parser *par)

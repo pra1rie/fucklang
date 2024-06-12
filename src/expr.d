@@ -215,12 +215,14 @@ class ExprWhile : Expr
 {
     Expr condition;
     Expr expr;
+    Expr after;
 
-    this(Expr c, Expr e)
+    this(Expr c, Expr e, Expr a)
     {
         super(ExprType.WHILE);
         condition = c;
         expr = e;
+        after = a;
     }
 }
 

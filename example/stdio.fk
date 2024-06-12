@@ -1,4 +1,3 @@
-
 extern "lib/stdio.so" (
     print
     println

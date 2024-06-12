@@ -408,6 +408,9 @@ private:
         currentScope.funs = lastScope.funs;
         while (doExpr(expr.condition).isTrue) {
             res = doExpr(expr.expr);
+            if (expr.after)
+                doExpr(expr.after);
+
             if (is_next) {
                 is_next = false;
                 continue;

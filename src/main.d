@@ -6,11 +6,12 @@ import fuck.parser;
 import fuck.interpreter;
 import fuck.core.value;
 
+// TODO: allow for importing multiple files with a single 'import'
 // TODO: look at $PATH for 'import' and 'extern'
-// TODO: get command line arguments from fuck core
+// TODO: better runtime error messages (at least show where error occurred)
+// TODO: add 'typeof' to fuck core
 // TODO: function pointers
 // TODO: call functions with dot syntax (foo.bar())
-// TODO: better runtime error messages
 
 void main(string[] args)
 {
@@ -21,7 +22,7 @@ void main(string[] args)
     auto path = args[1];
     auto ast = parseFile(path);
 
-    loadFuckCore();
+    loadFuckCore(args);
     auto fuck = Interpreter(ast);
     fuck.run(fuck.ast);
     closeFuckLibs();

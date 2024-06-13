@@ -10,18 +10,23 @@ import core.sys.posix.dlfcn;
 import fuck.expr;
 import fuck.core.value;
 import fuck.core.binaryop;
-import fuck.core.stdlib;
+import fuck.core.core;
 
 Value function(ulong argc, Value *argv)[string] fuck_core;
 Value function(Value *argv, int argc)[string] fuck_extern;
+Value[] fuck_vargs;
 
-static void loadFuckCore()
+static void loadFuckCore(string[] args)
 {
-    fuck_core["string"] = &std_string;
-    fuck_core["len"]    = &std_array_len;
-    fuck_core["append"] = &std_array_append;
-    fuck_core["insert"] = &std_array_insert;
-    fuck_core["remove"] = &std_array_remove;
+    if (args.length > 1)
+        args[1..$].each!(a => fuck_vargs ~= Value(a));
+
+    fuck_core["arguments"] = (argc, argv) => Value(fuck_vargs);
+    fuck_core["string"]    = &core_string;
+    fuck_core["len"]       = &core_array_len;
+    fuck_core["append"]    = &core_array_append;
+    fuck_core["insert"]    = &core_array_insert;
+    fuck_core["remove"]    = &core_array_remove;
 }
 
 alias Function = ExprMakeFunction;
@@ -309,7 +314,7 @@ private:
 
         if (expr.field !in obj.value.as_obj) {
             stderr.writefln("error: '%s' does not contain field '%s'",
-                    std_string(obj.value.as_obj["@typeof"]), expr.field);
+                    core_string(obj.value.as_obj["@typeof"]), expr.field);
             die();
         }
 
@@ -328,7 +333,7 @@ private:
 
         if (expr.field !in obj.value.as_obj) {
             stderr.writefln("error: '%s' does not contain field '%s'",
-                    std_string(obj.value.as_obj["@typeof"]), expr.field);
+                    core_string(obj.value.as_obj["@typeof"]), expr.field);
             die();
         }
 

@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include "value.h"
 
-extern char *std_cstring(Value arg);
+extern char *core_cstring(Value arg);
 
 extern Value
 print(int argc, Value *argv)
 {
     for (int i = 0; i < argc; ++i) {
-        printf("%s", std_cstring(argv[i]));
+        printf("%s", core_cstring(argv[i]));
     }
     return (Value){.type = TYPE_NUMBER, .value.as_num = 0};
 }

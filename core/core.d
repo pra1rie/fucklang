@@ -1,4 +1,4 @@
-module fuck.core.stdlib;
+module fuck.core.core;
 import std.stdio;
 import std.string;
 import std.conv;
@@ -17,21 +17,21 @@ static void expect(ulong argc, ulong nargs, string name)
     }
 }
 
-extern(C) immutable(char*) std_cstring(Value arg)
+extern(C) immutable(char*) core_cstring(Value arg)
 {
-    return std_string(arg).toStringz;
+    return core_string(arg).toStringz;
 }
 
-string std_string(Value arg, bool escape = false)
+string core_string(Value arg, bool escape = false)
 {
-    auto res = to!string(std_string(1, &arg).value.as_str.data);
+    auto res = to!string(core_string(1, &arg).value.as_str.data);
     if (escape && arg.type == Type.STRING) {
         return "\"" ~ res ~ "\"";
     }
     return res;
 }
 
-Value std_string(ulong argc, Value *argv)
+Value core_string(ulong argc, Value *argv)
 {
     argc.expect(1, "string");
 
@@ -45,7 +45,7 @@ Value std_string(ulong argc, Value *argv)
         auto arr = "[";
         for (int i = 0; i < val.value.as_arr.size; ++i) {
             if (i > 0) arr ~= ", ";
-            arr ~= std_string(val.value.as_arr.data[i], true);
+            arr ~= core_string(val.value.as_arr.data[i], true);
         }
         arr ~= "]";
         return Value(arr);
@@ -54,24 +54,24 @@ Value std_string(ulong argc, Value *argv)
     }
 }
 
-Value std_array_len(ulong argc, Value *argv)
+Value core_array_len(ulong argc, Value *argv)
 {
     argc.expect(1, "len");
     Value arr = argv[0];
     if (arr.type != Type.ARRAY) {
-        stderr.writefln("error: 'len' expected array, got '%s'", std_string(arr));
+        stderr.writefln("error: 'len' expected array, got '%s'", core_string(arr));
         die();
     }
 
     return Value(to!double(arr.value.as_arr.size));
 }
 
-Value std_array_append(ulong argc, Value *argv)
+Value core_array_append(ulong argc, Value *argv)
 {
     argc.expect(2, "append");
     Value arr = argv[0];
     if (arr.type != Type.ARRAY) {
-        stderr.writefln("error: 'append' expected array, got '%s'", std_string(arr));
+        stderr.writefln("error: 'append' expected array, got '%s'", core_string(arr));
         die();
     }
 
@@ -84,16 +84,16 @@ Value std_array_append(ulong argc, Value *argv)
     return arr;
 }
 
-Value std_array_insert(ulong argc, Value *argv)
+Value core_array_insert(ulong argc, Value *argv)
 {
     argc.expect(3, "insert");
     Value arr = argv[0];
     if (arr.type != Type.ARRAY) {
-        stderr.writefln("error: 'insert' expected array, got '%s'", std_string(arr));
+        stderr.writefln("error: 'insert' expected array, got '%s'", core_string(arr));
         die();
     }
     if (argv[1].type != Type.NUMBER) {
-        stderr.writefln("error: 'insert' expected number, got '%s'", std_string(argv[1]));
+        stderr.writefln("error: 'insert' expected number, got '%s'", core_string(argv[1]));
         die();
     }
 
@@ -115,16 +115,16 @@ Value std_array_insert(ulong argc, Value *argv)
     return arr;
 }
 
-Value std_array_remove(ulong argc, Value *argv)
+Value core_array_remove(ulong argc, Value *argv)
 {
     argc.expect(2, "remove");
     Value arr = argv[0];
     if (arr.type != Type.ARRAY) {
-        stderr.writefln("error: 'remove' expected array, got '%s'", std_string(arr));
+        stderr.writefln("error: 'remove' expected array, got '%s'", core_string(arr));
         die();
     }
     if (argv[1].type != Type.NUMBER) {
-        stderr.writefln("error: 'remove' expected number, got '%s'", std_string(argv[1]));
+        stderr.writefln("error: 'remove' expected number, got '%s'", core_string(argv[1]));
         die();
     }
 

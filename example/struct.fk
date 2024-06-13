@@ -10,5 +10,5 @@ def person_say(person, message) {
 }
 
 juan = Person("Cabrón")
-person_say(juan, concat("tengo ", string(juan.age), " años"))
+person_say(juan, string("tengo ", juan.age, " años"))
 

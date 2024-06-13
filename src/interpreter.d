@@ -24,7 +24,6 @@ static void loadFuckCore(string[] args)
 
     fuck_core["arguments"] = (argc, argv) => Value(fuck_vargs);
     fuck_core["string"]    = &core_string;
-    fuck_core["concat"]    = &core_string_concat;
     fuck_core["len"]       = &core_array_len;
     fuck_core["append"]    = &core_array_append;
     fuck_core["insert"]    = &core_array_insert;
@@ -32,7 +31,6 @@ static void loadFuckCore(string[] args)
 }
 
 alias Function = ExprMakeFunction;
-/* alias Structure = ExprMakeStruct; */
 
 struct Structure {
     string name;

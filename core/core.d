@@ -34,33 +34,32 @@ string core_string(Value arg, bool escape = false)
 Value core_string(ulong argc, Value *argv)
 {
     argc.expect(1, "string");
+    string str;
 
-    auto val = argv[0];
-    switch (val.type) {
-    case Type.NUMBER:
-        return Value(to!string(val.value.as_num));
-    case Type.STRING:
-        return Value(val.value.as_str);
-    case Type.ARRAY:
-        auto arr = "[";
-        for (int i = 0; i < val.value.as_arr.size; ++i) {
-            if (i > 0) arr ~= ", ";
-            arr ~= core_string(val.value.as_arr.data[i], true);
+    foreach (i; 0..argc) {
+        auto val = argv[i];
+
+        switch (val.type) {
+        case Type.NUMBER:
+            str ~= to!string(val.value.as_num);
+            break;
+        case Type.STRING:
+            str ~= val.value.as_str.data.fromStringz;
+            break;
+        case Type.ARRAY:
+            auto arr = "[";
+            foreach (j; 0..val.value.as_arr.size) {
+                if (j > 0) arr ~= ", ";
+                arr ~= core_string(val.value.as_arr.data[j], true);
+            }
+            str ~= arr ~ "]";
+            break;
+        default:
+            str ~= "nil";
+            break;
         }
-        arr ~= "]";
-        return Value(arr);
-    default:
-        return Value("nil");
     }
-}
-
-Value core_string_concat(ulong argc, Value *argv)
-{
-    argc.expect(1, "concat");
-    string s;
-    foreach (i; 0..argc)
-        s ~= core_string(argv[i]);
-    return Value(s);
+    return Value(str);
 }
 
 Value core_array_len(ulong argc, Value *argv)

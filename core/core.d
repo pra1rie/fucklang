@@ -54,6 +54,15 @@ Value core_string(ulong argc, Value *argv)
     }
 }
 
+Value core_string_concat(ulong argc, Value *argv)
+{
+    argc.expect(1, "concat");
+    string s;
+    foreach (i; 0..argc)
+        s ~= core_string(argv[i]);
+    return Value(s);
+}
+
 Value core_array_len(ulong argc, Value *argv)
 {
     argc.expect(1, "len");

@@ -423,7 +423,7 @@ Expr parseKeywordStruct(Parser *par)
     par.pos++; // skip 'struct'
 
     string name;
-    string[] fields;
+    Expr[string] fields;
 
     if (par.peek.type != TokenType.WORD) {
         stderr.writefln("%s: error: unexpected '%s'",
@@ -437,10 +437,11 @@ Expr parseKeywordStruct(Parser *par)
     return new ExprMakeStruct(loc, name, fields);
 }
 
-string[] parseStructFields(Parser *par)
+Expr[string] parseStructFields(Parser *par)
 {
     auto end = Token(TokenType.OPERATOR, "}");
-    string[] fields;
+    Expr[string] fields;
+    Expr[] field_names;
 
     if (par.peek != Token(TokenType.OPERATOR, "{")) {
         stderr.writefln("%s: error: expected '{', got '%s'",
@@ -455,9 +456,23 @@ string[] parseStructFields(Parser *par)
                     par.peek.loc.get, par.peek.value);
             exit(1);
         }
-        fields ~= par.peek.value;
+        if (par.peek.value in fields) {
+            stderr.writefln("%s: error: redefinition of field '%s'",
+                    par.peek.loc.get, par.peek.value);
+            exit(1);
+        }
+
+        auto name = par.peek.value;
+        field_names ~= new ExprLiteral(par.peek.loc, Value(name));
+        fields[name] = new ExprLiteral(par.peek.loc, Value(0));
         par.pos++;
+        if (par.peek == Token(TokenType.OPERATOR, "=")) {
+            par.pos++; // skip '='
+            fields[name] = parseExpr(par);
+        }
     }
+
+    fields["@fields"] = new ExprMakeArray(par.peek.loc, field_names);
 
     if (par.peek != end) {
         stderr.writefln("%s: error: expected '}', got '%s'",

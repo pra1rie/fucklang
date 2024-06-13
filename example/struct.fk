@@ -1,10 +1,14 @@
 import "example/stdio.fk"
 
-struct Person { name age }
+struct Person {
+    name = "Emanon"
+    age = 69
+}
 
-def person_say(person, message)
+def person_say(person, message) {
     println(person.name, ": ", message)
+}
 
-juan = Person("Cabrón", 69)
-person_say(juan, "<insert funny message>")
+juan = Person("Cabrón")
+person_say(juan, concat("tengo ", string(juan.age), " años"))
 

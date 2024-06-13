@@ -24,6 +24,7 @@ static void loadFuckCore(string[] args)
 
     fuck_core["arguments"] = (argc, argv) => Value(fuck_vargs);
     fuck_core["string"]    = &core_string;
+    fuck_core["concat"]    = &core_string_concat;
     fuck_core["len"]       = &core_array_len;
     fuck_core["append"]    = &core_array_append;
     fuck_core["insert"]    = &core_array_insert;
@@ -31,7 +32,12 @@ static void loadFuckCore(string[] args)
 }
 
 alias Function = ExprMakeFunction;
-alias Structure = ExprMakeStruct;
+/* alias Structure = ExprMakeStruct; */
+
+struct Structure {
+    string name;
+    Value[string] fields;
+}
 
 struct Scope {
     string name;
@@ -140,17 +146,20 @@ private:
         auto struc = (name in currentScope.objs)?
                         currentScope.objs[name] : global.objs[name];
 
-        if (args.length != struc.fields.length) {
+        auto fields = struc.fields["@fields"].value.as_arr;
+        if (args.length > fields.size) {
             stderr.writefln("%s: error: struct %s expects %d field(s), got %d",
-                    loc.get, name, struc.fields.length, args.length);
+                    loc.get, name, fields.size, args.length);
             die();
         }
 
         Value[string] res;
         res["@typeof"] = Value(name);
+        res["@fields"] = struc.fields["@fields"];
 
-        foreach (i; 0..args.length) {
-            res[struc.fields[i]] = args[i];
+        foreach (i; 0..fields.size) {
+            auto field = cast(string)fields.data[i].value.as_str.data.fromStringz;
+            res[field] = (i < args.length)? args[i] : struc.fields[field];
         }
 
         return Value(res);
@@ -295,12 +304,15 @@ private:
     Value doMakeStruct(ExprMakeStruct expr)
     {
         Value[string] s;
+        auto field_names = doExpr(expr.fields["@fields"]);
+
         s["@typeof"] = Value(expr.name);
+        s["@fields"] = field_names;
 
-        foreach (field; expr.fields)
-            s[field] = Value(0);
+        foreach (field; expr.fields.byKeyValue)
+            s[field.key] = doExpr(field.value);
 
-        currentScope.objs[expr.name] = expr;
+        currentScope.objs[expr.name] = Structure(expr.name, s);
         return Value(s);
     }
 

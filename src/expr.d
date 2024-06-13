@@ -120,9 +120,9 @@ class ExprCallFunction : Expr
 class ExprMakeStruct : Expr
 {
     string name;
-    string[] fields;
+    Expr[string] fields;
 
-    this(Loc loc, string n, string[] f)
+    this(Loc loc, string n, Expr[string] f)
     {
         super(loc, ExprType.MAKE_STRUCT);
         name = n;

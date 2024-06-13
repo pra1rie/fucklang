@@ -1,4 +1,5 @@
 module fuck.core.binaryop;
+import fuck.core.core;
 import fuck.core.value;
 import std.stdio;
 import std.conv;
@@ -8,7 +9,7 @@ static void expectNumbers(string op, Value a, Value b)
 {
     if (a.type != Type.NUMBER || b.type != Type.NUMBER) {
         stderr.writefln("error: '%s' expected numbers, got '%s' and '%s'",
-                op, a.value, b.value);
+                op, core_string(a), core_string(b));
         die();
     }
 }

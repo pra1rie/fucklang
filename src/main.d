@@ -8,7 +8,6 @@ import fuck.core.value;
 
 // TODO: allow for importing multiple files with a single 'import'
 // TODO: look at $PATH for 'import' and 'extern'
-// TODO: better runtime error messages (at least show where error occurred)
 // TODO: add 'typeof' to fuck core
 // TODO: function pointers
 // TODO: call functions with dot syntax (foo.bar())

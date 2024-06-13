@@ -8,6 +8,7 @@ import std.file;
 import core.stdc.stdlib;
 import core.sys.posix.dlfcn;
 import fuck.expr;
+import fuck.parser;
 import fuck.core.value;
 import fuck.core.binaryop;
 import fuck.core.core;
@@ -90,7 +91,7 @@ private:
         return &scopes[$-2];
     }
 
-    Function getFunction(string name)
+    Function getFunction(Loc loc, string name)
     {
         // TODO: check core functions + stdlib
         if (name in global.funs)
@@ -98,31 +99,31 @@ private:
         else if (name in currentScope.funs)
             return currentScope.funs[name];
 
-        stderr.writefln("error: function '%s' does not exist", name);
+        stderr.writefln("%s: error: function '%s' does not exist", loc.get, name);
         die();
         assert(0); // make compiler happy
     }
 
-    Value getVariable(string name)
+    Value getVariable(Loc loc, string name)
     {
         if (name in global.vars)
             return global.vars[name];
         else if (name in currentScope.vars)
             return currentScope.vars[name];
 
-        stderr.writefln("error: variable '%s' does not exist", name);
+        stderr.writefln("%s: error: variable '%s' does not exist", loc.get, name);
         die();
         assert(0); // make compiler happy
     }
 
     Value execFunction(string name, Expr func, Value[] args)
     {
-        auto fn = getFunction(name);
+        auto fn = getFunction(func.loc, name);
         scopes ~= Scope(name);
 
         if (fn.args.length != args.length) {
-            stderr.writefln("error: function %s expects %d argument(s), got %d",
-                    name, fn.args.length, args.length);
+            stderr.writefln("%s: error: function %s expects %d argument(s), got %d",
+                    func.loc.get, name, fn.args.length, args.length);
             die();
         }
         for (int i = 0; i < fn.args.length; ++i) {
@@ -134,14 +135,14 @@ private:
         return res;
     }
 
-    Value createStruct(string name, Value[] args)
+    Value createStruct(Loc loc, string name, Value[] args)
     {
         auto struc = (name in currentScope.objs)?
                         currentScope.objs[name] : global.objs[name];
 
         if (args.length != struc.fields.length) {
-            stderr.writefln("error: struct %s expects %d field(s), got %d",
-                    name, struc.fields.length, args.length);
+            stderr.writefln("%s: error: struct %s expects %d field(s), got %d",
+                    loc.get, name, struc.fields.length, args.length);
             die();
         }
 
@@ -197,7 +198,7 @@ private:
         case ExprType.BINARY_OP:
             return doBinaryOp(cast(ExprBinaryOp) expr);
         default:
-            stderr.writefln("error: unexpected %s", to!string(expr.type));
+            stderr.writefln("%s: error: unexpected %s", expr.loc.get, to!string(expr.type));
             die();
         }
         assert(0); // make the compiler happy
@@ -214,14 +215,14 @@ private:
         auto funs = expr.funs;
 
         if (!lib.exists || lib.isDir) {
-            stderr.writefln("error: could not load library '%s'", lib);
+            stderr.writefln("%s: error: could not load library '%s'", expr.loc.get, lib);
             die();
         }
 
         void *lh = dlopen(lib.toStringz, RTLD_LAZY);
         fuck_libs ~= lh;
         if (!lh) {
-            stderr.writefln("error: could not load library '%s'", lib);
+            stderr.writefln("%s: error: could not load library '%s'", expr.loc.get, lib);
             die();
         }
 
@@ -230,7 +231,7 @@ private:
                                             dlsym(lh, fun.func.toStringz);
             char *error = dlerror();
             if (error != null) {
-                stderr.writefln("error: %s: %s", lib, error.fromStringz);
+                stderr.writefln("%s: error: %s: %s", expr.loc.get, lib, error.fromStringz);
                 die();
             }
         }
@@ -247,7 +248,7 @@ private:
 
     Value doGetVariable(ExprGetVariable expr)
     {
-        return getVariable(expr.name);
+        return getVariable(expr.loc, expr.name);
     }
 
     Value doMakeFunction(ExprMakeFunction expr)
@@ -273,7 +274,7 @@ private:
             func = global.funs[name];
         }
         else if (name in currentScope.objs || name in global.objs) {
-            return createStruct(name, args);
+            return createStruct(expr.loc, name, args);
         }
         else if (name in fuck_extern) {
             auto argc = to!int(args.length);
@@ -284,7 +285,7 @@ private:
             return fuck_core[name](args.length, args.ptr);
         }
         else {
-            stderr.writefln("error: function '%s' does not exist", name);
+            stderr.writefln("%s: error: function '%s' does not exist", expr.loc.get, name);
             die();
         }
 
@@ -308,13 +309,13 @@ private:
         Value obj = doExpr(expr.struc);
 
         if (obj.type != Type.STRUCT) {
-            stderr.writefln("error: struct.field expects (struct, word)");
+            stderr.writefln("%s: error: struct.field expects (struct, word)", expr.loc.get);
             die();
         }
 
         if (expr.field !in obj.value.as_obj) {
-            stderr.writefln("error: '%s' does not contain field '%s'",
-                    core_string(obj.value.as_obj["@typeof"]), expr.field);
+            stderr.writefln("%s: error: '%s' does not contain field '%s'",
+                    expr.loc.get, core_string(obj.value.as_obj["@typeof"]), expr.field);
             die();
         }
 
@@ -327,13 +328,13 @@ private:
         Value val = doExpr(expr.value);
 
         if (obj.type != Type.STRUCT) {
-            stderr.writefln("error: struct.field expects (struct, word)");
+            stderr.writefln("%s: error: struct.field expects (struct, word)", expr.loc.get);
             die();
         }
 
         if (expr.field !in obj.value.as_obj) {
-            stderr.writefln("error: '%s' does not contain field '%s'",
-                    core_string(obj.value.as_obj["@typeof"]), expr.field);
+            stderr.writefln("%s: error: '%s' does not contain field '%s'",
+                    expr.loc.get, core_string(obj.value.as_obj["@typeof"]), expr.field);
             die();
         }
 
@@ -355,12 +356,12 @@ private:
         Value index = doExpr(expr.index);
 
         if (array.type != Type.ARRAY || index.type != Type.NUMBER) {
-            stderr.writefln("error: 'array[index]' expects (array, number)");
+            stderr.writefln("%s: error: 'array[index]' expects (array, number)", expr.loc.get);
             die();
         }
 
         if (index.value.as_num < 0 || index.value.as_num >= array.value.as_arr.size) {
-            stderr.writefln("error: array index out of range");
+            stderr.writefln("%s: error: array index out of range", expr.loc.get);
             die();
         }
 
@@ -375,12 +376,12 @@ private:
         Value value = doExpr(expr.value);
 
         if (array.type != Type.ARRAY || index.type != Type.NUMBER) {
-            stderr.writefln("error: 'array[index]' expects (array, number)");
+            stderr.writefln("%s: error: 'array[index]' expects (array, number)", expr.loc.get);
             die();
         }
 
         if (index.value.as_num < 0 || index.value.as_num >= array.value.as_arr.size) {
-            stderr.writefln("error: array index out of range");
+            stderr.writefln("%s: error: array index out of range", expr.loc.get);
             die();
         }
 
@@ -457,7 +458,7 @@ private:
         case "!":
             return Value(to!double(!res.isTrue));
         default:
-            stderr.writefln("error: unexpected operator '%s'", expr.op);
+            stderr.writefln("%s: error: unexpected operator '%s'", expr.loc.get, expr.op);
             die();
         }
         assert(0); // make compiler 
@@ -474,7 +475,7 @@ private:
         if (comparison.canFind(expr.op))
             return opCompare(expr.op, a, b);
 
-        stderr.writefln("error: unexpected operator '%s'", expr.op);
+        stderr.writefln("%s: error: unexpected operator '%s'", expr.loc.get, expr.op);
         die();
         assert(0); // make happy
     }

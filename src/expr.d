@@ -1,4 +1,5 @@
 module fuck.expr;
+import fuck.parser;
 import fuck.core.value;
 
 enum ExprType {
@@ -31,9 +32,11 @@ struct ExternFuncAlias {
 class Expr
 {
     ExprType type;
+    Loc loc;
 
-    this(ExprType t)
+    this(Loc l, ExprType t)
     {
+        loc = l;
         type = t;
     }
 }
@@ -42,9 +45,9 @@ class ExprLiteral : Expr
 {
     Value value;
 
-    this(Value v)
+    this(Loc loc, Value v)
     {
-        super(ExprType.LITERAL);
+        super(loc, ExprType.LITERAL);
         value = v;
     }
 }
@@ -54,9 +57,9 @@ class ExprExtern : Expr
     string lib;
     ExternFuncAlias[] funs;
 
-    this(string l, ExternFuncAlias[] f)
+    this(Loc loc, string l, ExternFuncAlias[] f)
     {
-        super(ExprType.EXTERN);
+        super(loc, ExprType.EXTERN);
         lib = l;
         funs = f;
     }
@@ -67,9 +70,9 @@ class ExprSetVariable : Expr
     string name;
     Expr value;
 
-    this(string n, Expr v)
+    this(Loc loc, string n, Expr v)
     {
-        super(ExprType.SET_VARIABLE);
+        super(loc, ExprType.SET_VARIABLE);
         name = n;
         value = v;
     }
@@ -79,9 +82,9 @@ class ExprGetVariable : Expr
 {
     string name;
 
-    this(string n)
+    this(Loc loc, string n)
     {
-        super(ExprType.GET_VARIABLE);
+        super(loc, ExprType.GET_VARIABLE);
         name = n;
     }
 }
@@ -92,9 +95,9 @@ class ExprMakeFunction : Expr
     string[] args;
     Expr expr;
 
-    this(string n, string[] a, Expr e)
+    this(Loc loc, string n, string[] a, Expr e)
     {
-        super(ExprType.MAKE_FUNCTION);
+        super(loc, ExprType.MAKE_FUNCTION);
         name = n;
         args = a;
         expr = e;
@@ -106,9 +109,9 @@ class ExprCallFunction : Expr
     string name;
     Expr[] args;
 
-    this(string n, Expr[] a)
+    this(Loc loc, string n, Expr[] a)
     {
-        super(ExprType.CALL_FUNCTION);
+        super(loc, ExprType.CALL_FUNCTION);
         name = n;
         args = a;
     }
@@ -119,9 +122,9 @@ class ExprMakeStruct : Expr
     string name;
     string[] fields;
 
-    this(string n, string[] f)
+    this(Loc loc, string n, string[] f)
     {
-        super(ExprType.MAKE_STRUCT);
+        super(loc, ExprType.MAKE_STRUCT);
         name = n;
         fields = f;
     }
@@ -132,9 +135,9 @@ class ExprGetStructField : Expr
     Expr struc;
     string field;
 
-    this(Expr s, string f)
+    this(Loc loc, Expr s, string f)
     {
-        super(ExprType.GET_STRUCT_FIELD);
+        super(loc, ExprType.GET_STRUCT_FIELD);
         struc = s;
         field = f;
     }
@@ -146,9 +149,9 @@ class ExprSetStructField : Expr
     string field;
     Expr value;
 
-    this(Expr s, string f, Expr v)
+    this(Loc loc, Expr s, string f, Expr v)
     {
-        super(ExprType.SET_STRUCT_FIELD);
+        super(loc, ExprType.SET_STRUCT_FIELD);
         struc = s;
         field = f;
         value = v;
@@ -159,9 +162,9 @@ class ExprMakeArray : Expr
 {
     Expr[] array;
 
-    this(Expr[] a)
+    this(Loc loc, Expr[] a)
     {
-        super(ExprType.MAKE_ARRAY);
+        super(loc, ExprType.MAKE_ARRAY);
         array = a;
     }
 }
@@ -171,9 +174,9 @@ class ExprGetArrayAtIndex : Expr
     Expr array;
     Expr index;
 
-    this(Expr a, Expr i)
+    this(Loc loc, Expr a, Expr i)
     {
-        super(ExprType.GET_ARRAY_INDEX);
+        super(loc, ExprType.GET_ARRAY_INDEX);
         array = a;
         index = i;
     }
@@ -185,9 +188,9 @@ class ExprSetArrayAtIndex : Expr
     Expr index;
     Expr value;
 
-    this(Expr a, Expr i, Expr v)
+    this(Loc loc, Expr a, Expr i, Expr v)
     {
-        super(ExprType.SET_ARRAY_INDEX);
+        super(loc, ExprType.SET_ARRAY_INDEX);
         array = a;
         index = i;
         value = v;
@@ -201,9 +204,9 @@ class ExprIf : Expr
     Expr elze;
     bool has_else;
 
-    this(Expr c, Expr e, Expr z, bool h = false)
+    this(Loc loc, Expr c, Expr e, Expr z, bool h = false)
     {
-        super(ExprType.IF);
+        super(loc, ExprType.IF);
         condition = c;
         expr = e;
         elze = z;
@@ -217,9 +220,9 @@ class ExprWhile : Expr
     Expr expr;
     Expr after;
 
-    this(Expr c, Expr e, Expr a)
+    this(Loc loc, Expr c, Expr e, Expr a)
     {
-        super(ExprType.WHILE);
+        super(loc, ExprType.WHILE);
         condition = c;
         expr = e;
         after = a;
@@ -230,9 +233,9 @@ class ExprReturn : Expr
 {
     Expr expr;
 
-    this(Expr e)
+    this(Loc loc, Expr e)
     {
-        super(ExprType.RETURN);
+        super(loc, ExprType.RETURN);
         expr = e;
     }
 }
@@ -241,9 +244,9 @@ class ExprBreak : Expr
 {
     bool is_next;
 
-    this(bool n)
+    this(Loc loc, bool n)
     {
-        super(ExprType.BREAK);
+        super(loc, ExprType.BREAK);
         is_next = n;
     }
 }
@@ -252,9 +255,9 @@ class ExprBlock : Expr
 {
     Expr[] block;
 
-    this(Expr[] b)
+    this(Loc loc, Expr[] b)
     {
-        super(ExprType.BLOCK);
+        super(loc, ExprType.BLOCK);
         block = b;
     }
 }
@@ -264,9 +267,9 @@ class ExprUnaryOp : Expr
     string op;
     Expr value;
 
-    this(string o, Expr v)
+    this(Loc loc, string o, Expr v)
     {
-        super(ExprType.UNARY_OP);
+        super(loc, ExprType.UNARY_OP);
         op = o;
         value = v;
     }
@@ -278,9 +281,9 @@ class ExprBinaryOp : Expr
     Expr left;
     Expr right;
 
-    this(string o, Expr a, Expr b)
+    this(Loc loc, string o, Expr a, Expr b)
     {
-        super(ExprType.BINARY_OP);
+        super(loc, ExprType.BINARY_OP);
         op = o;
         left = a;
         right = b;

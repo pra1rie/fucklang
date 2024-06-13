@@ -311,6 +311,7 @@ string[] parseFunctionArgs(Parser *par)
 
 Expr parseKeywordImport(Parser *par)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip 'import'
     if (par.peek.type != TokenType.STRING) {
         stderr.writefln("%s: error: unexpected '%s'",
@@ -322,11 +323,12 @@ Expr parseKeywordImport(Parser *par)
     par.pos++;
 
     auto expr = parseFile(path);
-    return new ExprBlock(expr);
+    return new ExprBlock(loc, expr);
 }
 
 Expr parseKeywordDef(Parser *par)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip 'def'
     if (par.peek.type != TokenType.WORD) {
         stderr.writefln("%s: error: unexpected '%s'",
@@ -339,11 +341,12 @@ Expr parseKeywordDef(Parser *par)
     string[] args = parseFunctionArgs(par);
     Expr expr = parseExpr(par);
 
-    return new ExprMakeFunction(name, args, expr);
+    return new ExprMakeFunction(loc, name, args, expr);
 }
 
 Expr parseKeywordExtern(Parser *par)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip 'extern'
     if (par.peek.type != TokenType.STRING) {
         stderr.writefln("%s: error: expected string, got %s",
@@ -403,19 +406,20 @@ Expr parseKeywordExtern(Parser *par)
         exit(1);
     }
 
-    return new ExprExtern(lib, funs);
+    return new ExprExtern(loc, lib, funs);
 }
 
 Expr parseKeywordReturn(Parser *par)
 {
-    auto line = par.peek.loc.line;
+    auto loc = par.peek.loc;
     par.pos++; // skip 'return'
     Expr ret = parseExpr(par);
-    return new ExprReturn(ret);
+    return new ExprReturn(loc, ret);
 }
 
 Expr parseKeywordStruct(Parser *par)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip 'struct'
 
     string name;
@@ -430,7 +434,7 @@ Expr parseKeywordStruct(Parser *par)
     name = par.peek.value;
     par.pos++;
     fields = parseStructFields(par);
-    return new ExprMakeStruct(name, fields);
+    return new ExprMakeStruct(loc, name, fields);
 }
 
 string[] parseStructFields(Parser *par)
@@ -466,6 +470,7 @@ string[] parseStructFields(Parser *par)
 
 Expr parseKeywordIf(Parser *par)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip 'if'
     Expr cond = parseExpr(par); // condition
     Expr expr = parseExpr(par); // body
@@ -478,11 +483,12 @@ Expr parseKeywordIf(Parser *par)
         has_elze = true;
     }
 
-    return new ExprIf(cond, expr, elze, has_elze);
+    return new ExprIf(loc, cond, expr, elze, has_elze);
 }
 
 Expr parseKeywordWhile(Parser *par)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip 'while'
     Expr cond = parseExpr(par); // condition
     Expr after;
@@ -492,19 +498,21 @@ Expr parseKeywordWhile(Parser *par)
     }
 
     Expr expr = parseExpr(par); // body
-    return new ExprWhile(cond, expr, after);
+    return new ExprWhile(loc, cond, expr, after);
 }
 
 Expr parseKeywordBreak(Parser *par)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip 'break'
-    return new ExprBreak(false);
+    return new ExprBreak(loc, false);
 }
 
 Expr parseKeywordNext(Parser *par)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip 'next'
-    return new ExprBreak(true);
+    return new ExprBreak(loc, true);
 }
 
 Expr parseBlock(Parser *par)
@@ -519,23 +527,25 @@ Expr parseBlock(Parser *par)
     }
 
     if (!par.inbound || par.peek != end) {
-        stderr.writefln("%s: error: missing '}'", loc);
+        stderr.writefln("%s: error: missing '}'", loc.get);
     }
 
     par.pos++; // skip '}'
-    return new ExprBlock(block);
+    return new ExprBlock(loc, block);
 }
 
 Expr parseUnaryOp(Parser *par)
 {
+    auto loc = par.peek.loc;
     string op = par.peek.value;
     par.pos++;
     Expr expr = parseExpr(par);
-    return new ExprUnaryOp(op, expr);
+    return new ExprUnaryOp(loc, op, expr);
 }
 
 Expr parseBinaryOp(Parser *par)
 {
+    auto loc = par.peek.loc;
     auto ops = ["&&", "||"];
     string op;
     Expr left = parseCondition(par);
@@ -545,7 +555,7 @@ Expr parseBinaryOp(Parser *par)
         par.pos++;
 
         Expr right = parseCondition(par);
-        left = new ExprBinaryOp(op, left, right);
+        left = new ExprBinaryOp(loc, op, left, right);
     }
 
     return left;
@@ -553,6 +563,7 @@ Expr parseBinaryOp(Parser *par)
 
 Expr parseCondition(Parser *par)
 {
+    auto loc = par.peek.loc;
     auto ops = ["==", "!=", ">", "<", ">=", "<="];
     string op;
     Expr left = parseAddition(par);
@@ -562,7 +573,7 @@ Expr parseCondition(Parser *par)
         par.pos++;
 
         Expr right = parseAddition(par);
-        left = new ExprBinaryOp(op, left, right);
+        left = new ExprBinaryOp(loc, op, left, right);
     }
 
     return left;
@@ -570,6 +581,7 @@ Expr parseCondition(Parser *par)
 
 Expr parseAddition(Parser *par)
 {
+    auto loc = par.peek.loc;
     auto ops = ["+", "-"];
     string op;
     Expr left = parseMultiplication(par);
@@ -579,7 +591,7 @@ Expr parseAddition(Parser *par)
         par.pos++;
 
         Expr right = parseMultiplication(par);
-        left = new ExprBinaryOp(op, left, right);
+        left = new ExprBinaryOp(loc, op, left, right);
     }
 
     return left;
@@ -587,6 +599,7 @@ Expr parseAddition(Parser *par)
 
 Expr parseMultiplication(Parser *par)
 {
+    auto loc = par.peek.loc;
     auto ops = ["*", "/"];
     string op;
     Expr left = parseFactorExtra(par);
@@ -596,7 +609,7 @@ Expr parseMultiplication(Parser *par)
         par.pos++;
 
         Expr right = parseFactorExtra(par);
-        left = new ExprBinaryOp(op, left, right);
+        left = new ExprBinaryOp(loc, op, left, right);
     }
 
     return left;
@@ -620,6 +633,7 @@ Expr parseFactorExtra(Parser *par)
 
 Expr parseStructField(Parser *par, Expr expr)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip '.'
     if (par.peek.type != TokenType.WORD) {
         stderr.writefln("%s: error: unexpected %s",
@@ -632,10 +646,10 @@ Expr parseStructField(Parser *par, Expr expr)
     if (par.peek == Token(TokenType.OPERATOR, "=")) {
         par.pos++; // skip '='
         Expr value = parseExpr(par);
-        return new ExprSetStructField(expr, field, value);
+        return new ExprSetStructField(loc, expr, field, value);
     }
 
-    return new ExprGetStructField(expr, field);
+    return new ExprGetStructField(loc, expr, field);
 }
 
 Expr parseFactor(Parser *par)
@@ -667,20 +681,23 @@ Expr parseFactor(Parser *par)
 
 Expr parseNumber(Parser *par)
 {
+    auto loc = par.peek.loc;
     auto val = Value(to!double(par.peek.value));
     par.pos++;
-    return new ExprLiteral(val);
+    return new ExprLiteral(loc, val);
 }
 
 Expr parseString(Parser *par)
 {
+    auto loc = par.peek.loc;
     auto val = Value(par.peek.value.escape);
     par.pos++;
-    return new ExprLiteral(val);
+    return new ExprLiteral(loc, val);
 }
 
 Expr parseArray(Parser *par)
 {
+    auto loc = par.peek.loc;
     auto end = Token(TokenType.OPERATOR, "]");
     par.pos++; // skip '['
     Expr[] expr;
@@ -703,11 +720,12 @@ Expr parseArray(Parser *par)
     }
 
     par.pos++; // skip ']'
-    return new ExprMakeArray(expr);
+    return new ExprMakeArray(loc, expr);
 }
 
 Expr parseArrayAtIndex(Parser *par, Expr array)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip '['
     Expr index = parseExpr(par);
 
@@ -721,14 +739,15 @@ Expr parseArrayAtIndex(Parser *par, Expr array)
     if (par.peek == Token(TokenType.OPERATOR, "=")) {
         par.pos++; // skip '='
         Expr expr = parseExpr(par);
-        return new ExprSetArrayAtIndex(array, index, expr);
+        return new ExprSetArrayAtIndex(loc, array, index, expr);
     }
 
-    return new ExprGetArrayAtIndex(array, index);
+    return new ExprGetArrayAtIndex(loc, array, index);
 }
 
 Expr parseWord(Parser *par)
 {
+    auto loc = par.peek.loc;
     auto name = par.peek.value;
     par.pos++;
 
@@ -737,18 +756,20 @@ Expr parseWord(Parser *par)
     if (par.peek == Token(TokenType.OPERATOR, "("))
         return parseFunctionCall(par, name);
 
-    return new ExprGetVariable(name);
+    return new ExprGetVariable(loc, name);
 }
 
 Expr parseAssignment(Parser *par, string name)
 {
+    auto loc = par.peek.loc;
     par.pos++; // skip '='
     Expr expr = parseExpr(par);
-    return new ExprSetVariable(name, expr);
+    return new ExprSetVariable(loc, name, expr);
 }
 
 Expr parseFunctionCall(Parser *par, string name)
 {
+    auto loc = par.peek.loc;
     auto end = Token(TokenType.OPERATOR, ")");
     par.pos++; // skip '('
     Expr[] args;
@@ -769,6 +790,6 @@ Expr parseFunctionCall(Parser *par, string name)
     }
     par.pos++; // skip ')'
 
-    return new ExprCallFunction(name, args);
+    return new ExprCallFunction(loc, name, args);
 }
 

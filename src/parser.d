@@ -349,7 +349,7 @@ Expr parseKeywordExtern(Parser *par)
     auto loc = par.peek.loc;
     par.pos++; // skip 'extern'
     if (par.peek.type != TokenType.STRING) {
-        stderr.writefln("%s: error: expected string, got %s",
+        stderr.writefln("%s: error: expected string, got '%s'",
                 par.peek.loc.get, par.peek.value);
         exit(1);
     }
@@ -362,7 +362,7 @@ Expr parseKeywordExtern(Parser *par)
         par.pos++; // skip '('
         while (par.peek != Token(TokenType.OPERATOR, ")")) {
             if (par.peek.type != TokenType.WORD) {
-                stderr.writefln("%s: error: unexpected %s",
+                stderr.writefln("%s: error: unexpected '%s'",
                         par.peek.loc.get, par.peek.value);
                 exit(1);
             }
@@ -373,7 +373,7 @@ Expr parseKeywordExtern(Parser *par)
             if (par.peek == Token(TokenType.OPERATOR, "=")) {
                 par.pos++;
                 if (par.peek.type != TokenType.WORD) {
-                    stderr.writefln("%s: error: unexpected %s",
+                    stderr.writefln("%s: error: unexpected '%s'",
                             par.peek.loc.get, par.peek.value);
                     exit(1);
                 }
@@ -391,7 +391,7 @@ Expr parseKeywordExtern(Parser *par)
         if (par.peek == Token(TokenType.OPERATOR, "=")) {
             par.pos++;
             if (par.peek.type != TokenType.WORD) {
-                stderr.writefln("%s: error: unexpected %s",
+                stderr.writefln("%s: error: unexpected '%s'",
                         par.peek.loc.get, par.peek.value);
                 exit(1);
             }
@@ -401,7 +401,7 @@ Expr parseKeywordExtern(Parser *par)
         funs ~= ExternFuncAlias(name, func);
     }
     else {
-        stderr.writefln("%s: error: unexpected %s",
+        stderr.writefln("%s: error: unexpected '%s'",
                 par.peek.loc.get, par.peek.value);
         exit(1);
     }
@@ -426,7 +426,7 @@ Expr parseKeywordStruct(Parser *par)
     string[] fields;
 
     if (par.peek.type != TokenType.WORD) {
-        stderr.writefln("%s: error: unexpected %s",
+        stderr.writefln("%s: error: unexpected '%s'",
                 par.peek.loc.get, par.peek.value);
         exit(1);
     }
@@ -443,7 +443,7 @@ string[] parseStructFields(Parser *par)
     string[] fields;
 
     if (par.peek != Token(TokenType.OPERATOR, "{")) {
-        stderr.writefln("%s: error: expected '{', got %s",
+        stderr.writefln("%s: error: expected '{', got '%s'",
                 par.peek.loc.get, par.peek.value);
         exit(1);
     }
@@ -451,7 +451,7 @@ string[] parseStructFields(Parser *par)
 
     while (par.peek != end) {
         if (par.peek.type != TokenType.WORD) {
-            stderr.writefln("%s: error: unexpected %s",
+            stderr.writefln("%s: error: unexpected '%s'",
                     par.peek.loc.get, par.peek.value);
             exit(1);
         }
@@ -460,7 +460,7 @@ string[] parseStructFields(Parser *par)
     }
 
     if (par.peek != end) {
-        stderr.writefln("%s: error: expected '}', got %s",
+        stderr.writefln("%s: error: expected '}', got '%s'",
                 par.peek.loc.get, par.peek.value);
         exit(1);
     }
@@ -636,7 +636,7 @@ Expr parseStructField(Parser *par, Expr expr)
     auto loc = par.peek.loc;
     par.pos++; // skip '.'
     if (par.peek.type != TokenType.WORD) {
-        stderr.writefln("%s: error: unexpected %s",
+        stderr.writefln("%s: error: unexpected '%s'",
                 par.peek.loc.get, par.peek.value);
         exit(1);
     }

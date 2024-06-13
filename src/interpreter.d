@@ -13,7 +13,7 @@ import fuck.core.value;
 import fuck.core.binaryop;
 import fuck.core.core;
 
-Value function(ulong argc, Value *argv)[string] fuck_core;
+Value function(Value[] args)[string] fuck_core;
 Value function(Value *argv, int argc)[string] fuck_extern;
 Value[] fuck_vargs;
 
@@ -22,7 +22,7 @@ static void loadFuckCore(string[] args)
     if (args.length > 1)
         args[1..$].each!(a => fuck_vargs ~= Value(a));
 
-    fuck_core["arguments"] = (argc, argv) => Value(fuck_vargs);
+    fuck_core["arguments"] = (args) => Value(fuck_vargs);
     fuck_core["string"]    = &core_string;
     fuck_core["len"]       = &core_array_len;
     fuck_core["append"]    = &core_array_append;
@@ -289,7 +289,7 @@ private:
             return fuck_extern[name](argv, argc);
         }
         else if (name in fuck_core) {
-            return fuck_core[name](args.length, args.ptr);
+            return fuck_core[name](args);
         }
         else {
             stderr.writefln("%s: error: function '%s' does not exist", expr.loc.get, name);

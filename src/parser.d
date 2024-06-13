@@ -16,6 +16,8 @@ immutable string[] keywords = [
     "if", "else", "while", "break", "next",
 ];
 
+string[] imported_files;
+
 struct Loc {
     string path;
     ulong line = 1;
@@ -322,6 +324,10 @@ Expr parseKeywordImport(Parser *par)
     auto path = par.peek.value;
     par.pos++;
 
+    if (imported_files.canFind(path))
+        return new ExprLiteral(loc, Value(0));
+
+    imported_files ~= path;
     auto expr = parseFile(path);
     return new ExprBlock(loc, expr);
 }

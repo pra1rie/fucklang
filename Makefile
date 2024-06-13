@@ -4,3 +4,4 @@ all:
 
 install: all
 	cp fuck /usr/local/bin/
+

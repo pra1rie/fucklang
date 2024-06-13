@@ -8,9 +8,10 @@ def loop(x) {
     }
     return 0
 
-    function_that_doesnt_exit("UwU")
+    function_that_doesnt_exist("UwU")
     the interpreter should never reach here
     so there should be no errors as long as its syntactically correct
+    "... i really should fix this"
 }
 
 loop(6)

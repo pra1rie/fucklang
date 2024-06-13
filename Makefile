@@ -4,3 +4,6 @@ all:
 install: all
 	cp fuck /usr/local/bin/
 
+uninstall:
+	rm -f /usr/local/bin/fuck
+

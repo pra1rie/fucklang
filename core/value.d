@@ -14,10 +14,10 @@ void closeFuckLibs()
     fuck_libs = [];
 }
 
-void die()
+void die(int num = 1)
 {
     closeFuckLibs();
-    exit(1);
+    exit(num);
 }
 
 enum Type {
@@ -67,6 +67,12 @@ struct Value {
 
     Type type;
     Val value;
+
+    this(void *p)
+    {
+        type = Type.POINTER;
+        value.as_ptr = p;
+    }
 
     this(double n)
     {

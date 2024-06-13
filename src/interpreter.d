@@ -24,6 +24,9 @@ static void loadFuckCore(string[] args)
 
     fuck_core["arguments"] = (args) => Value(fuck_vargs);
     fuck_core["string"]    = &core_string;
+    fuck_core["alloc"]     = &core_alloc;
+    fuck_core["realloc"]   = &core_realloc;
+    fuck_core["free"]      = &core_free;
     fuck_core["len"]       = &core_array_len;
     fuck_core["append"]    = &core_array_append;
     fuck_core["insert"]    = &core_array_insert;

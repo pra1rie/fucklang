@@ -90,6 +90,7 @@ void skipSpace(Lexer *lex)
     }
 }
 
+// TODO: '>>', '<<'
 bool isOperator(string s)
 {
     return [

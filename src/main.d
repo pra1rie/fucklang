@@ -6,6 +6,7 @@ import fuck.parser;
 import fuck.interpreter;
 import fuck.core.value;
 
+// TODO: functions for joining arrays, splitting/replacing strings, ...
 // TODO: allow for importing multiple files with a single 'import'
 // TODO: look at $PATH for 'import' and 'extern'
 // TODO: add 'typeof' to fuck core

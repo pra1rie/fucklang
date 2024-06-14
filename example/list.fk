@@ -1,13 +1,25 @@
 import "example/stdio.fk"
 
-list = ["Hello", "World!"]
-println(list)
-
-list[0] = "Goodbye"
+list = ["Goodbye", "World!"]
+list[0] = "Hello"
 println(list)
 
 list = append(list, "bruh")
 list = remove(list, 1)
 list = insert(list, 0, "kekw")
 println(list)
+
+def replace(str, start, end, val) {
+    i = start
+    while i <= end : i = i + 1 {
+        str = remove(str, start)
+    }
+    return insert(str, start, val)
+}
+
+string = "Hello"
+string = append(string, ", World!")
+println(string)
+string = replace(string, 4, 5, "OwO")
+println(string)
 

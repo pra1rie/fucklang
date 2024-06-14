@@ -1,6 +1,7 @@
 module fuck.core.core;
 import std.stdio;
 import std.string;
+import std.algorithm;
 import std.conv;
 import core.stdc.stdlib;
 import core.memory;
@@ -78,6 +79,39 @@ Value core_string(Value[] args)
     return Value(str);
 }
 
+Value core_string_append(Value str, Value val)
+{
+    return Value(core_string(str) ~ core_string(val));
+}
+
+Value core_string_insert(Value str, Value idx, Value val)
+{
+    string res = core_string(str);
+    auto i = to!ulong(idx.value.as_num);
+
+    if (i >= res.length) {
+        stderr.writefln("error: string index out of range");
+        die();
+    }
+
+    res = res[0..i] ~ core_string(val) ~ res[i..$];
+    return Value(res);
+}
+
+Value core_string_remove(Value str, Value idx)
+{
+    string res = core_string(str);
+    auto i = to!ulong(idx.value.as_num);
+    if (i >= res.length) {
+        stderr.writefln("error: string index out of range");
+        die();
+    }
+
+    if (i == res.length-1) res = res[0..$-1];
+    else res = res[0..i] ~ res[i+1..$];
+    return Value(res);
+}
+
 Value core_alloc(Value[] args)
 {
     args.length.expect(1, "alloc");
@@ -146,6 +180,8 @@ Value core_array_append(Value[] args)
 {
     args.length.expect(2, "append");
     auto arr = args[0];
+    if (arr.type == Type.STRING && args[1].type == Type.STRING)
+        return core_string_append(arr, args[1]);
     if (arr.type != Type.ARRAY) {
         stderr.writefln("error: 'append' expects (array, any), got (%s, %s)",
                 core_string(arr, true), core_string(args[1], true));
@@ -167,6 +203,8 @@ Value core_array_insert(Value[] args)
     auto idx = args[1];
     auto val = args[2];
 
+    if (arr.type == Type.STRING && idx.type == Type.NUMBER && val.type == Type.STRING)
+        return core_string_insert(arr, idx, val);
     if (arr.type != Type.ARRAY || idx.type != Type.NUMBER) {
         stderr.writefln("error: 'insert' expects (array, number, any), got (%s, %s, %s)",
                 core_string(arr, true), core_string(idx, true), core_string(val, true));
@@ -193,6 +231,8 @@ Value core_array_remove(Value[] args)
     args.length.expect(2, "remove");
     auto arr = args[0];
     auto idx = args[1];
+    if (arr.type == Type.STRING && idx.type == Type.NUMBER)
+        return core_string_remove(arr, idx);
     if (arr.type != Type.ARRAY || idx.type != Type.NUMBER) {
         stderr.writefln("error: 'remove' expects (array, number), got (%s, %s)",
                 core_string(arr, true), core_string(idx, true));

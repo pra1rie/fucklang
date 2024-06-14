@@ -368,6 +368,9 @@ private:
         Value array = doExpr(expr.array);
         Value index = doExpr(expr.index);
 
+        if (array.type == Type.STRING && index.type == Type.NUMBER)
+            return doGetStringAtIndex(expr.loc, array, index);
+
         if (array.type != Type.ARRAY || index.type != Type.NUMBER) {
             stderr.writefln("%s: error: 'array[index]' expects (array, number)", expr.loc.get);
             die();
@@ -401,6 +404,17 @@ private:
         ulong idx = to!ulong(index.value.as_num);
         array.value.as_arr.data[idx] = value;
         return value;
+    }
+
+    Value doGetStringAtIndex(Loc loc, Value str, Value idx)
+    {
+        auto s = core_string(str);
+        auto i = to!ulong(idx.value.as_num);
+        if (i >= s.length) {
+            stderr.writefln("%s: error: string index out of range", loc.get);
+            die();
+        }
+        return Value(s[i] ~ "");
     }
 
     Value doIf(ExprIf expr)

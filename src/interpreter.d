@@ -13,8 +13,14 @@ import fuck.core.value;
 import fuck.core.binaryop;
 import fuck.core.core;
 
+struct ExternFunction {
+    /* string ret_type; */
+    string[] types;
+    Value function(Value *argv, int argc) func;
+}
+
 Value function(Value[] args)[string] fuck_core;
-Value function(Value *argv, int argc)[string] fuck_extern;
+ExternFunction[string] fuck_extern;
 Value[] fuck_vargs;
 
 static void loadFuckCore(string[] args)
@@ -23,6 +29,7 @@ static void loadFuckCore(string[] args)
         args[1..$].each!(a => fuck_vargs ~= Value(a));
 
     fuck_core["arguments"] = (args) => Value(fuck_vargs);
+    fuck_core["typeof"]    = &core_typeof;
     fuck_core["string"]    = &core_string;
     fuck_core["alloc"]     = &core_alloc;
     fuck_core["realloc"]   = &core_realloc;
@@ -66,11 +73,9 @@ struct Interpreter {
         Value res;
         for (int i = 0; i < block.length; ++i) {
             res = doExpr(block[i]);
-            
-            if (is_return || is_break) {
-                break;
-            }
-            else if (is_next) {
+
+            if (is_return || is_break) break;
+            if (is_next) {
                 ++i;
                 is_next = false;
             }
@@ -78,8 +83,6 @@ struct Interpreter {
 
         if (!blocks.canFind(currentScope.name))
             is_return = false;
-        /* is_break = false; */
-        /* is_next = false; */
         return res;
     }
 
@@ -129,8 +132,9 @@ private:
         scopes ~= Scope(name);
 
         if (fn.args.length != args.length) {
-            stderr.writefln("%s: error: function %s expects %d argument(s), got %d",
-                    func.loc.get, name, fn.args.length, args.length);
+            auto nargs = (fn.args.length == 1)? "argument" : "arguments";
+            stderr.writefln("%s: error: function %s expects %d %s, got %d",
+                    func.loc.get, name, fn.args.length, nargs, args.length);
             die();
         }
         for (int i = 0; i < fn.args.length; ++i) {
@@ -237,8 +241,8 @@ private:
         }
 
         foreach (fun; funs) {
-            fuck_extern[fun.name] = cast(Value function(Value*, int))
-                                            dlsym(lh, fun.func.toStringz);
+            auto f = cast(Value function(Value*, int)) dlsym(lh, fun.func.toStringz);
+            fuck_extern[fun.name] = ExternFunction(fun.types, f);
             char *error = dlerror();
             if (error != null) {
                 stderr.writefln("%s: error: %s: %s", expr.loc.get, lib, error.fromStringz);
@@ -287,9 +291,29 @@ private:
             return createStruct(expr.loc, name, args);
         }
         else if (name in fuck_extern) {
+            auto fn = fuck_extern[name];
             auto argc = to!int(args.length);
             auto argv = args.ptr;
-            return fuck_extern[name](argv, argc);
+            // don't check number of arguments if last argument is a wildcard (_)
+            if ((fn.types.length != 0 && fn.types[$-1] != "_")) {
+                if (argc != fn.types.length) {
+                    auto nargs = fn.types.length == 1? "argument" : "arguments";
+                    stderr.writefln("%s: error: function '%s' expects %d %s, got %d",
+                            expr.loc.get, name, fn.types.length, nargs, argc);
+                    die();
+                }
+            }
+
+            // typecheck arguments unless type is wildcard (_)
+            foreach (i; 0..argc) {
+                if (i >= fn.types.length) break; // this is fine since number of arguments was already checked
+                if (fn.types[i] != "_" && core_typeof(args[i]) != fn.types[i]) {
+                    stderr.writefln("%s: error: function '%s' expects '%s', got '%s'",
+                            expr.loc.get, name, fn.types[i], core_string(args[i]));
+                    die();
+                }
+            }
+            return fn.func(argv, argc);
         }
         else if (name in fuck_core) {
             return fuck_core[name](args);

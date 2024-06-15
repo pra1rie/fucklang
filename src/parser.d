@@ -90,7 +90,7 @@ void skipSpace(Lexer *lex)
     }
 }
 
-// TODO: '>>', '<<'
+// TODO: '>>', '<<', '%'
 bool isOperator(string s)
 {
     return [
@@ -104,8 +104,8 @@ bool isOperator(string s)
 Token nextToken(Lexer *lex)
 {
     Token tok;
-    tok.loc = lex.loc;
     skipSpace(lex);
+    tok.loc = lex.loc;
     if (!lex.inbound)
         return tok;
 
@@ -155,7 +155,7 @@ Token nextToken(Lexer *lex)
         return tok;
     }
 
-    if (lex.current.isAlpha) {
+    if (lex.current.isAlpha || lex.current == '_') {
         while (lex.inbound && lex.current.isAlphaNum || lex.current == '_') {
             tok.value ~= lex.current;
             lex.pos++;
@@ -217,6 +217,17 @@ struct Parser {
         if (!inbound)
             return Token(TokenType.EOF, "<EOF>");
         return toks[pos + i];
+    }
+
+    Token consume(TokenType type)
+    {
+        if (peek.type != type) {
+            stderr.writefln("%s: error: unexpected '%s'", peek.loc.get, peek.value);
+            exit(1);
+        }
+        auto tok = peek;
+        pos++;
+        return tok;
     }
 }
 
@@ -355,65 +366,55 @@ Expr parseKeywordExtern(Parser *par)
 {
     auto loc = par.peek.loc;
     par.pos++; // skip 'extern'
-    if (par.peek.type != TokenType.STRING) {
-        stderr.writefln("%s: error: expected string, got '%s'",
-                par.peek.loc.get, par.peek.value);
-        exit(1);
-    }
-    
-    string lib = par.peek.value;
+    string lib = par.consume(TokenType.STRING).value;
     ExternFuncAlias[] funs;
-    par.pos++;
 
-    if (par.peek == Token(TokenType.OPERATOR, "(")) {
-        par.pos++; // skip '('
-        while (par.peek != Token(TokenType.OPERATOR, ")")) {
-            if (par.peek.type != TokenType.WORD) {
-                stderr.writefln("%s: error: unexpected '%s'",
-                        par.peek.loc.get, par.peek.value);
-                exit(1);
-            }
-
-            string name = par.peek.value;
-            string func = name;
-            par.pos++;
-            if (par.peek == Token(TokenType.OPERATOR, "=")) {
-                par.pos++;
-                if (par.peek.type != TokenType.WORD) {
-                    stderr.writefln("%s: error: unexpected '%s'",
-                            par.peek.loc.get, par.peek.value);
-                    exit(1);
-                }
-                func = par.peek.value;
-                par.pos++;
-            }
-            funs ~= ExternFuncAlias(name, func);
-        }
-        par.pos++; // skip ')'
-    }
-    else if (par.peek.type == TokenType.WORD) {
-        string name = par.peek.value;
-        string func = name;
-        par.pos++;
-        if (par.peek == Token(TokenType.OPERATOR, "=")) {
-            par.pos++;
-            if (par.peek.type != TokenType.WORD) {
-                stderr.writefln("%s: error: unexpected '%s'",
-                        par.peek.loc.get, par.peek.value);
-                exit(1);
-            }
-            func = par.peek.value;
-            par.pos++;
-        }
-        funs ~= ExternFuncAlias(name, func);
-    }
-    else {
+    if (par.peek != Token(TokenType.OPERATOR, "{")) {
         stderr.writefln("%s: error: unexpected '%s'",
                 par.peek.loc.get, par.peek.value);
         exit(1);
     }
+    par.pos++; // skip '{'
+    while (par.peek != Token(TokenType.OPERATOR, "}")) {
+        string name = par.consume(TokenType.WORD).value;
+        string func = name;
+        string[] types;
+        if (par.peek == Token(TokenType.OPERATOR, "=")) {
+            par.pos++;
+            func = par.consume(TokenType.WORD).value;
+        }
+        if (par.peek == Token(TokenType.OPERATOR, "(")) {
+            types = parseExternTypes(par);
+        }
+        funs ~= ExternFuncAlias(name, func, types);
+    }
 
+    par.pos++; // skip '}'
     return new ExprExtern(loc, lib, funs);
+}
+
+string[] parseExternTypes(Parser *par)
+{
+    auto end = Token(TokenType.OPERATOR, ")");
+    par.pos++; // skip '('
+    string[] types;
+
+    if (par.peek != end) {
+        types ~= par.consume(TokenType.WORD).value;
+        while (par.peek == Token(TokenType.OPERATOR, ",")) {
+            par.pos++; // skip ','
+            auto type = par.consume(TokenType.WORD).value;
+            types ~= type;
+        }
+    }
+
+    if (par.peek != end) {
+        stderr.writefln("%s: error: expected ')', got '%s'",
+                par.peek.loc.get, par.peek.value);
+        exit(1);
+    }
+    par.pos++; // skip ')'
+    return types;
 }
 
 Expr parseKeywordReturn(Parser *par)

@@ -2,10 +2,8 @@
 #include <stdlib.h>
 #include "value.h"
 
-extern char *core_cstring(Value arg);
-
 extern Value
-print(int argc, Value *argv)
+fuck_print(int argc, Value *argv)
 {
     for (int i = 0; i < argc; ++i) {
         printf("%s", core_cstring(argv[i]));
@@ -14,9 +12,9 @@ print(int argc, Value *argv)
 }
 
 extern Value
-println(int argc, Value *argv)
+fuck_println(int argc, Value *argv)
 {
-    print(argc, argv);
+    fuck_print(argc, argv);
     printf("\n");
     return (Value){.type = TYPE_NUMBER, .value.as_num = 0};
 }

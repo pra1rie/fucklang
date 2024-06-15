@@ -19,6 +19,11 @@ static void expect(ulong argc, ulong nargs, string name)
     }
 }
 
+extern(C) immutable(char*) core_ctypeof(Value arg)
+{
+    return core_typeof(arg).toStringz;
+}
+
 extern(C) immutable(char*) core_cstring(Value arg)
 {
     return core_string(arg).toStringz;
@@ -37,6 +42,24 @@ extern(C) void* core_realloc(void *ptr, ulong sz)
 extern(C) void core_free(void *ptr)
 {
     core_free([Value(ptr)]);
+}
+
+string core_typeof(Value val)
+{
+    auto types = ["Number", "String", "Array", "Pointer"];
+    switch (val.type) {
+    case Type.STRUCT:
+        return core_string(val.value.as_obj["@typeof"]);
+    default:
+        assert(val.type < types.length);
+        return types[val.type];
+    }
+}
+
+Value core_typeof(Value[] args)
+{
+    args.length.expect(1, "typeof");
+    return Value(core_typeof(args[0]));
 }
 
 string core_string(Value val, bool escape = false)

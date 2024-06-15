@@ -42,6 +42,7 @@ extern void die(int n);
 extern Value objGetField(void *obj, char *field);
 extern void objSetField(void *obj, char *field, Value value);
 
+extern char* core_ctypeof(Value val);
 extern char* core_cstring(Value val);
 extern void* core_alloc(size_t sz);
 extern void* core_realloc(void *ptr, size_t sz);

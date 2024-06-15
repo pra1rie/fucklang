@@ -17,6 +17,9 @@ $ make
 // there are no builtin input/output functions,
 // you have to write your own library if you want that functionality
 // there's an example library in `lib/stdio.c`. build with `./build_stdlib.sh`
-extern "lib/stdio.so" (print println)
-println("Hello, World!")
+extern "lib/stdio.so" {
+    print = fuck_print(_)
+}
+
+println("Hello, World!\n")
 ```

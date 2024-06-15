@@ -27,6 +27,7 @@ enum ExprType {
 struct ExternFuncAlias {
     string name;
     string func;
+    string[] types;
 }
 
 class Expr

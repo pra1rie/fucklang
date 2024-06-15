@@ -1,5 +1,5 @@
-extern "lib/stdio.so" (
-    print
-    println
-)
+extern "lib/stdio.so" {
+    print = fuck_print(_)
+    println = fuck_println(_)
+}
 

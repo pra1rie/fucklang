@@ -3,7 +3,7 @@ import std.string;
 import core.sys.posix.dlfcn;
 import core.stdc.stdlib;
 import core.stdc.string;
-
+import fuck.expr;
 
 extern(C):
 void*[] fuck_libs;
@@ -25,6 +25,7 @@ enum Type {
     STRING,
     ARRAY,
     POINTER,
+    FUNCTION,
     STRUCT,
 }
 
@@ -56,12 +57,19 @@ struct ValueArray {
     }
 }
 
+struct ValueFunction {
+    // TODO: maybe also store their types
+    string[] args;
+    Expr expr;
+}
+
 struct Value {
     union Val {
         void *as_ptr;
         double as_num;
         String as_str;
         ValueArray as_arr;
+        ValueFunction as_fun;
         Value[string] as_obj;
     }
 
@@ -98,6 +106,12 @@ struct Value {
         value.as_arr = ValueArray(l);
     }
 
+    this(ValueFunction f)
+    {
+        type = Type.FUNCTION;
+        value.as_fun = f;
+    }
+
     this(Value[string] o)
     {
         type = Type.STRUCT;
@@ -119,6 +133,8 @@ bool equals(Value a, Value b)
         return a.value.as_arr == b.value.as_arr;
     case Type.POINTER:
         return a.value.as_ptr == b.value.as_ptr;
+    case Type.FUNCTION:
+        return a.value.as_fun == b.value.as_fun;
     case Type.STRUCT:
         return a.value.as_obj == b.value.as_obj;
     default:

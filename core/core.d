@@ -46,7 +46,7 @@ extern(C) void core_free(void *ptr)
 
 string core_typeof(Value val)
 {
-    auto types = ["Number", "String", "Array", "Pointer"];
+    auto types = ["Number", "String", "Array", "Pointer", "Function"];
     switch (val.type) {
     case Type.STRUCT:
         return core_string(val.value.as_obj["@typeof"]);
@@ -77,6 +77,13 @@ string core_string(Value val, bool escape = false)
             arr ~= core_string(val.value.as_arr.data[j], true);
         }
         return arr ~ "]";
+    case Type.FUNCTION:
+        auto str = "def (";
+        foreach (i, arg; val.value.as_fun.args) {
+            if (i > 0) str ~= ", ";
+            str ~= arg;
+        }
+        return str ~ ")";
     case Type.STRUCT:
         auto obj = val.value.as_obj;
         auto str = core_string(obj["@typeof"]) ~ " {";

@@ -18,16 +18,6 @@ immutable string[] keywords = [
 
 string[] imported_files;
 
-struct Loc {
-    string path;
-    ulong line = 1;
-
-    string get()
-    {
-        return format("%s:%d", path, line);
-    }
-}
-
 enum TokenType {
     EOF,
     WORD,
@@ -348,14 +338,10 @@ Expr parseKeywordDef(Parser *par)
 {
     auto loc = par.peek.loc;
     par.pos++; // skip 'def'
-    if (par.peek.type != TokenType.WORD) {
-        stderr.writefln("%s: error: unexpected '%s'",
-                par.peek.loc.get, par.peek.value);
-        exit(1);
-    }
+    string name;
+    if (par.peek.type == TokenType.WORD)
+        name = par.consume(TokenType.WORD).value;
 
-    auto name = par.peek.value;
-    par.pos++;
     string[] args = parseFunctionArgs(par);
     Expr expr = parseExpr(par);
 
@@ -642,13 +628,17 @@ Expr parseFactorExtra(Parser *par)
 {
     auto expr = parseFactor(par);
 
+    auto rou = Token(TokenType.OPERATOR, "(");
     auto bra = Token(TokenType.OPERATOR, "[");
     auto dot = Token(TokenType.OPERATOR, ".");
-    while ([bra, dot].canFind(par.peek)) {
+    while ([rou, bra, dot].canFind(par.peek)) {
         if (par.peek == dot)
             expr = parseStructField(par, expr);
         if (par.peek == bra)
             expr = parseArrayAtIndex(par, expr);
+        if (par.peek == rou)
+            expr = parseFunctionCall(par, expr);
+
     }
 
     return expr;
@@ -776,8 +766,8 @@ Expr parseWord(Parser *par)
 
     if (par.peek == Token(TokenType.OPERATOR, "="))
         return parseAssignment(par, name);
-    if (par.peek == Token(TokenType.OPERATOR, "("))
-        return parseFunctionCall(par, name);
+    /* if (par.peek == Token(TokenType.OPERATOR, "(")) */
+    /*     return parseFunctionCall(par, name); */
 
     return new ExprGetVariable(loc, name);
 }
@@ -790,7 +780,8 @@ Expr parseAssignment(Parser *par, string name)
     return new ExprSetVariable(loc, name, expr);
 }
 
-Expr parseFunctionCall(Parser *par, string name)
+/* Expr parseFunctionCall(Parser *par, string name) */
+Expr parseFunctionCall(Parser *par, Expr func)
 {
     auto loc = par.peek.loc;
     auto end = Token(TokenType.OPERATOR, ")");
@@ -813,6 +804,6 @@ Expr parseFunctionCall(Parser *par, string name)
     }
     par.pos++; // skip ')'
 
-    return new ExprCallFunction(loc, name, args);
+    return new ExprCallFunction(loc, func, args);
 }
 

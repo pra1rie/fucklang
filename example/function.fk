@@ -1,0 +1,19 @@
+import "example/stdio.fk"
+
+def add(a, b) a + b
+
+foo = add
+
+struct Bruh {
+    fn = def(_, a, b) foo(a, b)
+}
+
+def call(fn, a, b) {
+    return fn(a, b)
+}
+
+bruh = Bruh()
+
+println(foo(33, 36))
+println(bruh.fn(400, 20))
+println(call(add, 34, 35))

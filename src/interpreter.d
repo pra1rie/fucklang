@@ -40,7 +40,7 @@ static void loadFuckCore(string[] args)
     fuck_core["remove"]    = &core_array_remove;
 }
 
-alias Function = ExprMakeFunction;
+/* alias Function = ExprMakeFunction; */
 
 struct Structure {
     string name;
@@ -50,7 +50,7 @@ struct Structure {
 struct Scope {
     string name;
     Value[string] vars;
-    Function[string] funs;
+    /* Function[string] funs; */
     Structure[string] objs;
 
     this(string n)
@@ -59,9 +59,10 @@ struct Scope {
     }
 }
 
+auto global = Scope("<global>");
+
 struct Interpreter {
     Expr[] ast;
-    Scope *global = new Scope("<global>");
     Scope[] scopes;
     bool is_return;
     bool is_break;
@@ -90,28 +91,26 @@ private:
     Scope* currentScope()
     {
         if (scopes.length == 0)
-            return global;
+            return &global;
         return &scopes[$-1];
     }
 
     Scope* lastScope()
     {
         if (scopes.length < 2)
-            return global;
+            return &global;
         return &scopes[$-2];
     }
 
-    Function getFunction(Loc loc, string name)
+    ValueFunction getFunction(Loc loc, string name)
     {
-        // TODO: check core functions + stdlib
-        if (name in global.funs)
-            return global.funs[name];
-        else if (name in currentScope.funs)
-            return currentScope.funs[name];
+        auto var = getVariable(loc, name);
+        if (var.type != Type.FUNCTION) {
+            stderr.writefln("%s: error: '%s' is not a function", loc.get, name);
+            die();
+        }
 
-        stderr.writefln("%s: error: function '%s' does not exist", loc.get, name);
-        die();
-        assert(0); // make compiler happy
+        return var.value.as_fun;
     }
 
     Value getVariable(Loc loc, string name)
@@ -126,22 +125,21 @@ private:
         assert(0); // make compiler happy
     }
 
-    Value execFunction(string name, Expr func, Value[] args)
+    Value execFunction(string name, ValueFunction func, Value[] args)
     {
-        auto fn = getFunction(func.loc, name);
         scopes ~= Scope(name);
 
-        if (fn.args.length != args.length) {
-            auto nargs = (fn.args.length == 1)? "argument" : "arguments";
-            stderr.writefln("%s: error: function %s expects %d %s, got %d",
-                    func.loc.get, name, fn.args.length, nargs, args.length);
+        if (func.args.length != args.length) {
+            auto nargs = (func.args.length == 1)? "argument" : "arguments";
+            stderr.writefln("%s: error: function '%s' expects %d %s, got %d",
+                    func.expr.loc.get, name, func.args.length, nargs, args.length);
             die();
         }
-        for (int i = 0; i < fn.args.length; ++i) {
-            currentScope.vars[fn.args[i]] = args[i];
+        for (int i = 0; i < func.args.length; ++i) {
+            currentScope.vars[func.args[i]] = args[i];
         }
 
-        auto res = doExpr(func);
+        auto res = doExpr(func.expr);
         scopes.popBack;
         return res;
     }
@@ -268,24 +266,44 @@ private:
     Value doMakeFunction(ExprMakeFunction expr)
     {
         auto sc = currentScope;
-        auto name = String(expr.name);
-        sc.funs[expr.name] = expr;
-        return Value(0);
+        auto func = Value(ValueFunction(expr.args, expr.expr));
+        if (expr.name)
+            sc.vars[expr.name] = func;
+        return func;
     }
 
     Value doCallFunction(ExprCallFunction expr)
     {
         Value[] args;
-        Function func;
-        auto name = expr.name;
         foreach (arg; expr.args)
             args ~= doExpr(arg);
 
-        if (name in currentScope.funs) {
-            func = currentScope.funs[name];
+        if (expr.func.type != ExprType.GET_VARIABLE) {
+            auto func = doExpr(expr.func);
+            auto name = "<anon>";
+            if (func.type != Type.FUNCTION) {
+                stderr.writefln("%s: error: expected function, got '%s'",
+                        expr.loc.get, core_string(func));
+                die();
+            }
+            // add struct as first argument if called with 'struct.field()'
+            if (expr.func.type == ExprType.GET_STRUCT_FIELD) {
+                auto s = doExpr((cast(ExprGetStructField)expr.func).struc);
+                args = s ~ args;
+                foreach (k; s.value.as_obj.byKeyValue) {
+                    if (k.value == func) {
+                        name = k.key;
+                        break;
+                    }
+                }
+            }
+            return execFunction(name, func.value.as_fun, args);
         }
-        else if (name in global.funs) {
-            func = global.funs[name];
+
+        auto name = (cast(ExprGetVariable)expr.func).name;
+
+        if (name in currentScope.vars || name in global.vars) {
+            return execFunction(name, getFunction(expr.loc, name), args);
         }
         else if (name in currentScope.objs || name in global.objs) {
             return createStruct(expr.loc, name, args);
@@ -318,12 +336,9 @@ private:
         else if (name in fuck_core) {
             return fuck_core[name](args);
         }
-        else {
-            stderr.writefln("%s: error: function '%s' does not exist", expr.loc.get, name);
-            die();
-        }
-
-        return execFunction(name, func.expr, args);
+        stderr.writefln("%s: error: function '%s' does not exist", expr.loc.get, name);
+        die();
+        assert(0); // maek complier happy
     }
 
     Value doMakeStruct(ExprMakeStruct expr)
@@ -446,7 +461,7 @@ private:
         Value res;
         scopes ~= Scope("if");
         currentScope.vars = lastScope.vars;
-        currentScope.funs = lastScope.funs;
+        /* currentScope.funs = lastScope.funs; */
         if (doExpr(expr.condition).isTrue) {
             res = doExpr(expr.expr);
         }
@@ -462,7 +477,7 @@ private:
         Value res;
         scopes ~= Scope("while");
         currentScope.vars = lastScope.vars;
-        currentScope.funs = lastScope.funs;
+        /* currentScope.funs = lastScope.funs; */
         while (doExpr(expr.condition).isTrue) {
             res = doExpr(expr.expr);
             if (expr.after)

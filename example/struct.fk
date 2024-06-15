@@ -3,12 +3,12 @@ import "example/stdio.fk"
 struct Person {
     name = "Emanon"
     age = 69
-}
 
-def person_say(person, message) {
-    println(person.name, ": ", message)
+    say = def(self, message) {
+        println(self.name, ": ", message)
+    }
 }
 
 juan = Person("Cabrón")
-person_say(juan, string("tengo ", juan.age, " años"))
+juan.say(string("tengo ", juan.age, " años"))
 

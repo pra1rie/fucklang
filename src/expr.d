@@ -1,5 +1,5 @@
 module fuck.expr;
-import fuck.parser;
+import std.format;
 import fuck.core.value;
 
 enum ExprType {
@@ -22,6 +22,16 @@ enum ExprType {
     BLOCK,
     UNARY_OP,
     BINARY_OP,
+}
+
+struct Loc {
+    string path;
+    ulong line = 1;
+
+    string get()
+    {
+        return format("%s:%d", path, line);
+    }
 }
 
 struct ExternFuncAlias {
@@ -107,13 +117,15 @@ class ExprMakeFunction : Expr
 
 class ExprCallFunction : Expr
 {
-    string name;
+    /* string name; */
+    Expr func;
     Expr[] args;
 
-    this(Loc loc, string n, Expr[] a)
+    this(Loc loc, Expr f, Expr[] a)
     {
         super(loc, ExprType.CALL_FUNCTION);
-        name = n;
+        /* name = n; */
+        func = f;
         args = a;
     }
 }

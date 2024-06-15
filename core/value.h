@@ -12,6 +12,7 @@ typedef enum value_type_e {
     TYPE_STRING,
     TYPE_ARRAY,
     TYPE_POINTER,
+    TYPE_FUNCTION,
     TYPE_STRUCT,
 } Type;
 
@@ -25,6 +26,12 @@ typedef struct value_array_t {
     struct value_t *data;
 } ValueArray;
 
+typedef struct value_function_t {
+    void *args;
+    void *expr;
+    size_t padding; // lmfao
+} ValueFunction;
+
 typedef struct value_t {
     Type type;
     union {
@@ -32,6 +39,7 @@ typedef struct value_t {
         double as_num;
         String as_str;
         ValueArray as_arr;
+        ValueFunction as_fun;
         void *as_obj;
     } value;
 } Value;
@@ -39,6 +47,7 @@ typedef struct value_t {
 extern bool equals(Value a, Value b);
 extern bool isTrue(Value a);
 extern void die(int n);
+extern Value callFunction(ValueFunction fun);
 extern Value objGetField(void *obj, char *field);
 extern void objSetField(void *obj, char *field, Value value);
 

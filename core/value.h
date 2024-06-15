@@ -47,7 +47,7 @@ typedef struct value_t {
 extern bool equals(Value a, Value b);
 extern bool isTrue(Value a);
 extern void die(int n);
-extern Value callFunction(ValueFunction fun);
+extern Value callFunction(ValueFunction fun, int argc, Value *argv);
 extern Value objGetField(void *obj, char *field);
 extern void objSetField(void *obj, char *field, Value value);
 

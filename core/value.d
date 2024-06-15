@@ -3,6 +3,7 @@ import std.string;
 import core.sys.posix.dlfcn;
 import core.stdc.stdlib;
 import core.stdc.string;
+import fuck.interpreter;
 import fuck.expr;
 
 extern(C):
@@ -171,6 +172,20 @@ Value objGetField(Value[string] obj, char *field)
 void objSetField(Value[string] obj, char *field, Value value)
 {
     return objSetField(obj, cast(string) field.fromStringz, value);
+}
+
+extern(D) Value callFunction(ValueFunction fun, Value[] args)
+{
+    auto fuck = Interpreter([fun.expr]);
+    return fuck.execFunction("<anon>", fun, args);
+}
+
+Value callFunction(ValueFunction fun, int argc, Value *argv)
+{
+    Value[] args;
+    foreach (i; 0..argc)
+        args ~= argv[i];
+    return callFunction(fun, args);
 }
 
 // stupid dumb fuckery

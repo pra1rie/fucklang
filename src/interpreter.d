@@ -87,7 +87,6 @@ struct Interpreter {
         return res;
     }
 
-private:
     Scope* currentScope()
     {
         if (scopes.length == 0)
@@ -168,6 +167,7 @@ private:
         return Value(res);
     }
 
+private:
     Value doExpr(Expr expr)
     {
         switch (expr.type) {

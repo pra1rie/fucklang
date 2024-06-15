@@ -18,3 +18,9 @@ fuck_println(int argc, Value *argv)
     printf("\n");
     return (Value){.type = TYPE_NUMBER, .value.as_num = 0};
 }
+
+extern Value
+fuck_callback(int argc, Value *argv)
+{
+    return callFunction(argv[0].value.as_fun, argc-1, argv+1);
+}

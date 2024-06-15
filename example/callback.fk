@@ -1,0 +1,10 @@
+extern "lib/stdio.so" {
+    println = fuck_println(_)
+    callback = fuck_callback(Function, _)
+}
+
+fn = def(a, b) { a - b }
+
+res = callback(fn, 100, 31)
+println("res = ", res)
+

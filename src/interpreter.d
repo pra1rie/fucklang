@@ -254,7 +254,11 @@ private:
     Value doSetVariable(ExprSetVariable expr)
     {
         Value value = doExpr(expr.value);
-        currentScope.vars[expr.name] = value;
+        // make a copy if assigning to struct
+        if (value.type == Type.STRUCT)
+            currentScope.vars[expr.name] = Value(value.value.as_obj.dup());
+        else
+            currentScope.vars[expr.name] = value;
         return value;
     }
 
@@ -530,11 +534,16 @@ private:
         assert(0); // make compiler 
     }
 
+    // most of the good languages have this thing where if you have 2 or more conditions
+    // with && and one of them is false, it doesn't check the other
+    // and i use that all the time, so i expect fuck to behave the same.
     Value doBinaryOp(ExprBinaryOp expr)
     {
         auto maths = ["+", "-", "*", "/"];
         auto comparison = ["==", "!=", ">", "<", ">=", "<=", "&&", "||"];
         auto a = doExpr(expr.left);
+        if (!a.isTrue && expr.op == "&&")
+            return Value(0);
         auto b = doExpr(expr.right);
         if (maths.canFind(expr.op))
             return opMath(expr.op, a, b);

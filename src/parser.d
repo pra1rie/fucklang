@@ -239,9 +239,9 @@ Expr parseExpr(Parser *par)
         return parseKeyword(par);
     if (par.peek == Token(TokenType.OPERATOR, "{"))
         return parseBlock(par);
-    if (par.peek == Token(TokenType.OPERATOR, "!") ||
-            par.peek == Token(TokenType.OPERATOR, "-"))
-        return parseUnaryOp(par);
+    /* if (par.peek == Token(TokenType.OPERATOR, "!") || */
+    /*         par.peek == Token(TokenType.OPERATOR, "-")) */
+    /*     return parseUnaryOp(par); */
 
     return parseBinaryOp(par);
 }
@@ -546,7 +546,7 @@ Expr parseBlock(Parser *par)
 Expr parseUnaryOp(Parser *par)
 {
     auto loc = par.peek.loc;
-    string op = par.peek.value;
+    auto op = par.peek.value;
     par.pos++;
     Expr expr = parseExpr(par);
     return new ExprUnaryOp(loc, op, expr);
@@ -685,6 +685,10 @@ Expr parseFactor(Parser *par)
         }
         par.pos++;
         return expr;
+    }
+    else if (par.peek.type == TokenType.OPERATOR &&
+            ["!", "-"].canFind(par.peek.value)) {
+        return parseUnaryOp(par);
     }
 
     stderr.writefln("%s: error: unexpected '%s'",

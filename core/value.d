@@ -164,6 +164,14 @@ extern(D) void objSetField(Value[string] obj, string field, Value value)
     obj[field] = value;
 }
 
+Value objArray(ulong size)
+{
+    Value[] l;
+    foreach (i; 0..size)
+        l ~= Value(0);
+    return Value(l);
+}
+
 Value objGetField(Value[string] obj, char *field)
 {
     return objGetField(obj, cast(string) field.fromStringz);

@@ -50,6 +50,9 @@ extern void die(int n);
 extern Value callFunction(ValueFunction fun, int argc, Value *argv);
 extern Value objGetField(void *obj, char *field);
 extern void objSetField(void *obj, char *field, Value value);
+extern Value objArray(size_t size);
+// TODO: this:
+/* extern Value objStruct(char *name, char **fields); */
 
 extern char* core_ctypeof(Value val);
 extern char* core_cstring(Value val);

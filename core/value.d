@@ -1,5 +1,6 @@
 module fuck.core.value;
 import std.string;
+import std.array;
 import core.sys.posix.dlfcn;
 import core.stdc.stdlib;
 import core.stdc.string;
@@ -7,12 +8,18 @@ import fuck.interpreter;
 import fuck.expr;
 
 extern(C):
-void*[] fuck_libs;
+struct FuckLib {
+    string name;
+    void *lib;
+}
+
+FuckLib[] fuck_libs;
 void closeFuckLibs()
 {
-    foreach (lib; fuck_libs)
-        dlclose(lib);
-    fuck_libs = [];
+    while (fuck_libs.length) {
+        dlclose(fuck_libs[$-1].lib);
+        fuck_libs.popBack;
+    }
 }
 
 void die(int num = 1)

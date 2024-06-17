@@ -40,8 +40,6 @@ static void loadFuckCore(string[] args)
     fuck_core["remove"]    = &core_array_remove;
 }
 
-/* alias Function = ExprMakeFunction; */
-
 struct Structure {
     string name;
     Value[string] fields;
@@ -50,7 +48,6 @@ struct Structure {
 struct Scope {
     string name;
     Value[string] vars;
-    /* Function[string] funs; */
     Structure[string] objs;
 
     this(string n)
@@ -225,14 +222,25 @@ private:
     {
         auto lib = expr.lib;
         auto funs = expr.funs;
+        void *lh = null;
 
         if (!lib.exists || lib.isDir) {
             stderr.writefln("%s: error: could not load library '%s'", expr.loc.get, lib);
             die();
         }
 
-        void *lh = dlopen(lib.toStringz, RTLD_LAZY);
-        fuck_libs ~= lh;
+        // don't load lib twice
+        foreach(l; fuck_libs) {
+            if (l.name == lib) {
+                lh = l.lib;
+                break;
+            }
+        }
+        if (!lh) {
+            lh = dlopen(lib.toStringz, RTLD_LAZY);
+            fuck_libs ~= FuckLib(lib, lh);
+        }
+
         if (!lh) {
             stderr.writefln("%s: error: could not load library '%s'", expr.loc.get, lib);
             die();
@@ -240,12 +248,12 @@ private:
 
         foreach (fun; funs) {
             auto f = cast(Value function(Value*, int)) dlsym(lh, fun.func.toStringz);
-            fuck_extern[fun.name] = ExternFunction(fun.types, f);
             char *error = dlerror();
             if (error != null) {
                 stderr.writefln("%s: error: %s: %s", expr.loc.get, lib, error.fromStringz);
                 die();
             }
+            fuck_extern[fun.name] = ExternFunction(fun.types, f);
         }
 
         return Value(0);

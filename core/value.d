@@ -4,6 +4,7 @@ import std.array;
 import core.sys.posix.dlfcn;
 import core.stdc.stdlib;
 import core.stdc.string;
+import fuck.core.core;
 import fuck.interpreter;
 import fuck.expr;
 
@@ -168,6 +169,8 @@ extern(D) Value objGetField(Value[string] obj, string field)
 
 extern(D) void objSetField(Value[string] obj, string field, Value value)
 {
+    if (field !in obj)
+        obj["@fields"] = core_array_append([obj["@fields"], Value(field)]);
     obj[field] = value;
 }
 

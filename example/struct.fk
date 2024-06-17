@@ -4,7 +4,7 @@ struct Person {
     name = "Emanon"
     age = 69
 
-    say = def(self, message) {
+    def say(self, message) {
         println(self.name, ": ", message)
     }
 }

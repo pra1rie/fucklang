@@ -445,6 +445,19 @@ Expr[string] parseStructFields(Parser *par)
     par.pos++; // skip '{'
 
     while (par.peek != end) {
+        if (par.peek == Token(TokenType.KEYWORD, "def")) {
+            auto expr = parseExpr(par);
+            if (!(cast(ExprMakeFunction)expr).name) {
+                stderr.writefln("%s: error: missing field name",
+                        par.peek.loc.get);
+                exit(1);
+            }
+            auto name = (cast(ExprMakeFunction)expr).name;
+            field_names ~= new ExprLiteral(par.peek.loc, Value(name));
+            (cast(ExprMakeFunction)expr).name = "";
+            fields[name] = expr;
+            continue;
+        }
         if (par.peek.type != TokenType.WORD) {
             stderr.writefln("%s: error: unexpected '%s'",
                     par.peek.loc.get, par.peek.value);

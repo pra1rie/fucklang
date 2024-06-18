@@ -6,6 +6,7 @@ foo = add
 
 struct Bruh {
     fn = def(_, a, b) foo(a, b)
+    def foo(_, a, b) _.fn(a, b)
 }
 
 def call(fn, a, b) {
@@ -15,6 +16,6 @@ def call(fn, a, b) {
 bruh = Bruh()
 
 println(foo(33, 36))
-println((bruh.fn(400, 20)))
+println((bruh.foo(400, 20)))
 println(call(add, 34, 35))
 

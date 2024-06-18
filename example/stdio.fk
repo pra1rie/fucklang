@@ -1,4 +1,4 @@
-extern "lib/stdio.so" {
+extern "lib/stdlib.so" {
     print = fuck_print(_)
     println = fuck_println(_)
 }

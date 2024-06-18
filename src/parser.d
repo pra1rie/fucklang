@@ -221,10 +221,26 @@ struct Parser {
     }
 }
 
+string getFileFromPath(string path)
+{
+    if (path.exists && !path.isDir)
+        return path;
+
+    auto env = getenv("PATH").to!string.split(':');
+    foreach (p; env) {
+        auto full = p ~ '/' ~ path;
+        if (full.exists && !full.isDir)
+            return full;
+    }
+
+    stderr.writefln("error: could not read file '%s'", path);
+    exit(1);
+}
+
 Expr[] parseFile(string path)
 {
     Parser par;
-    par.toks = tokenizeFile(path);
+    par.toks = tokenizeFile(path.getFileFromPath);
 
     do {
         par.ast ~= parseExpr(&par);

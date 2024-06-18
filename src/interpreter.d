@@ -220,14 +220,10 @@ private:
 
     Value doExtern(ExprExtern expr)
     {
-        auto lib = expr.lib;
+        auto lib = expr.lib.getFileFromPath;
         auto funs = expr.funs;
         void *lh = null;
 
-        if (!lib.exists || lib.isDir) {
-            stderr.writefln("%s: error: could not load library '%s'", expr.loc.get, lib);
-            die();
-        }
 
         // don't load lib twice
         foreach(l; fuck_libs) {

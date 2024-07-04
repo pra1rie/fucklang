@@ -2,6 +2,7 @@ module fuck.core.core;
 import std.stdio;
 import std.string;
 import std.algorithm;
+import std.array;
 import std.conv;
 import core.stdc.stdlib;
 import core.memory;
@@ -210,6 +211,8 @@ Value core_array_append(Value[] args)
 {
     args.length.expect(2, "append");
     auto arr = args[0];
+    auto val = args[1];
+
     if (arr.type == Type.STRING && args[1].type == Type.STRING)
         return core_string_append(arr, args[1]);
     if (arr.type != Type.ARRAY) {
@@ -218,10 +221,7 @@ Value core_array_append(Value[] args)
         die();
     }
 
-    Value val = args[1];
-    Value[] ar;
-    foreach(i; 0..arr.value.as_arr.size)
-        ar ~= arr.value.as_arr.data[i];
+    auto ar = *cast(Value[]*)&arr.value.as_arr;
     ar ~= val;
     return Value(ar);
 }
@@ -247,12 +247,8 @@ Value core_array_insert(Value[] args)
         die();
     }
 
-    Value[] ar;
-    foreach (i; 0..arr.value.as_arr.size) {
-        if (i == index) ar ~= val;
-        ar ~= arr.value.as_arr.data[i];
-    }
-
+    auto ar = *cast(Value[]*)&arr.value.as_arr;
+    ar.insertInPlace(index, val);
     return Value(ar);
 }
 
@@ -275,11 +271,7 @@ Value core_array_remove(Value[] args)
         die();
     }
 
-    Value[] ar;
-    foreach (i; 0..arr.value.as_arr.size) {
-        if (i == index) continue;
-        ar ~= arr.value.as_arr.data[i];
-    }
-
+    auto ar = *cast(Value[]*)&arr.value.as_arr;
+    ar = (ar).remove(index);
     return Value(ar);
 }

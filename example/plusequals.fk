@@ -1,0 +1,13 @@
+import "example/stdio.fk"
+
+struct Bruh {
+    counter = 68
+    array = [426]
+}
+
+b = [33, Bruh()]
+b[0] += 36
+b[1].counter += 1
+b[1].array[0] -= 6
+println(b)
+

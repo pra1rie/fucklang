@@ -88,6 +88,8 @@ bool isOperator(string s)
         ":", ".", ",", "&", "|", "!", "=",
         ">", "<", "==", "!=", ">=", "<=",
         "+", "-", "*", "/", "&&", "||",
+
+        "+=", "-=", "*=", "/=",
     ].canFind(s);
 }
 
@@ -99,6 +101,7 @@ Token nextToken(Lexer *lex)
     if (!lex.inbound)
         return tok;
 
+    // TODO: binary numbers (0b prefix)
     if (lex.current.isDigit) {
         tok.type = TokenType.NUMBER;
         tok.value ~= lex.current;
@@ -126,6 +129,7 @@ Token nextToken(Lexer *lex)
         return tok;
     }
 
+    // TODO: maybe allow for single quote strings
     if (lex.current == '\"') {
         tok.type = TokenType.STRING;
         lex.pos++;
@@ -251,15 +255,41 @@ Expr[] parseFile(string path)
 
 Expr parseExpr(Parser *par)
 {
+    Expr res;
     if (par.peek.type == TokenType.KEYWORD)
-        return parseKeyword(par);
-    if (par.peek == Token(TokenType.OPERATOR, "{"))
-        return parseBlock(par);
-    /* if (par.peek == Token(TokenType.OPERATOR, "!") || */
-    /*         par.peek == Token(TokenType.OPERATOR, "-")) */
-    /*     return parseUnaryOp(par); */
+        res = parseKeyword(par);
+    else if (par.peek == Token(TokenType.OPERATOR, "{"))
+        res = parseBlock(par);
+    else
+        res = parseBinaryOp(par);
 
-    return parseBinaryOp(par);
+    auto ops = ["+=", "-=", "*=", "/="];
+    if (par.peek.type == TokenType.OPERATOR && ops.canFind(par.peek.value)) {
+        auto loc = par.peek.loc;
+        auto op = par.peek.value;
+        par.pos++; // skip op
+        auto expr = parseExpr(par);
+        expr = new ExprBinaryOp(loc, op[0]~"", res, expr);
+        // a += b
+        if (res.type == ExprType.GET_VARIABLE) {
+            auto var = cast(ExprGetVariable)res;
+            return new ExprSetVariable(res.loc, var.name, expr);
+        }
+        // a.foo += b
+        else if (res.type == ExprType.GET_STRUCT_FIELD) {
+            auto str = cast(ExprGetStructField)res;
+            return new ExprSetStructField(res.loc, str.struc, str.field, expr);
+        }
+        // a[0] += b
+        else if (res.type == ExprType.GET_ARRAY_INDEX) {
+            auto arr = cast(ExprGetArrayAtIndex)res;
+            return new ExprSetArrayAtIndex(res.loc, arr.array, arr.index, expr);
+        }
+        stderr.writefln("%s: error: unexpected '%s'", loc.get, op);
+        exit(1);
+    }
+
+    return res;
 }
 
 Expr parseKeyword(Parser *par)
@@ -284,7 +314,7 @@ Expr parseKeyword(Parser *par)
     case "next":
         return parseKeywordNext(par);
     default:
-        stderr.writefln("%s: error: unexpected keyword '%s'",
+        stderr.writefln("%s: error: unexpected '%s'",
                 par.peek.loc.get, par.peek.value);
         exit(1);
     }
@@ -667,7 +697,6 @@ Expr parseFactorExtra(Parser *par)
             expr = parseArrayAtIndex(par, expr);
         if (par.peek == rou)
             expr = parseFunctionCall(par, expr);
-
     }
 
     return expr;
@@ -799,8 +828,6 @@ Expr parseWord(Parser *par)
 
     if (par.peek == Token(TokenType.OPERATOR, "="))
         return parseAssignment(par, name);
-    /* if (par.peek == Token(TokenType.OPERATOR, "(")) */
-    /*     return parseFunctionCall(par, name); */
 
     return new ExprGetVariable(loc, name);
 }
@@ -813,7 +840,6 @@ Expr parseAssignment(Parser *par, string name)
     return new ExprSetVariable(loc, name, expr);
 }
 
-/* Expr parseFunctionCall(Parser *par, string name) */
 Expr parseFunctionCall(Parser *par, Expr func)
 {
     auto loc = par.peek.loc;

@@ -2,16 +2,10 @@ import "example/stdio.fk"
 
 def loop(x) {
     i = 0
-    while (i < x) : (i = i + 1) {
+    while (i < x) : (i += 1) {
         if (i == x/2) next
         println(i)
     }
-    return 0
-
-    function_that_doesnt_exist("UwU")
-    the interpreter should never reach here
-    so there should be no errors as long as its syntactically correct
-    "... i really should fix this"
 }
 
 loop(6)

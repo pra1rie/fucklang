@@ -68,7 +68,7 @@ struct Interpreter {
 
     Value run(Expr[] block)
     {
-        auto blocks = ["if", "while"];
+        auto blocks = ["if", "while", "case"];
         Value res;
         for (int i = 0; i < block.length; ++i) {
             res = doExpr(block[i]);
@@ -479,14 +479,22 @@ private:
 
     Value doCase(ExprCase expr)
     {
+        Value res;
         Value check = doExpr(expr.check);
+        bool found;
+        scopes ~= Scope("case");
+        currentScope.vars = lastScope.vars;
         foreach (match; expr.matches) {
-            if (check.equals(doExpr(match.match)))
-                return doExpr(match.expr);
+            if (check.equals(doExpr(match.match))) {
+                res = doExpr(match.expr);
+                found = true;
+                break;
+            }
         }
-        if (expr.has_defalt)
-            return doExpr(expr.defalt);
-        return Value(0);
+        if (expr.has_defalt && !found)
+            res = doExpr(expr.defalt);
+        scopes.popBack;
+        return res;
     }
 
     Value doIf(ExprIf expr)
@@ -494,7 +502,6 @@ private:
         Value res;
         scopes ~= Scope("if");
         currentScope.vars = lastScope.vars;
-        /* currentScope.funs = lastScope.funs; */
         if (doExpr(expr.condition).isTrue) {
             res = doExpr(expr.expr);
         }
@@ -510,7 +517,6 @@ private:
         Value res;
         scopes ~= Scope("while");
         currentScope.vars = lastScope.vars;
-        /* currentScope.funs = lastScope.funs; */
         while (doExpr(expr.condition).isTrue) {
             res = doExpr(expr.expr);
             if (expr.after)

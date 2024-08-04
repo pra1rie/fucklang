@@ -30,6 +30,12 @@ Value opMath(string op, Value a, Value b)
             die();
         }
         return Value(a.value.as_num / b.value.as_num);
+    case "%":
+        if (b.value.as_num == 0) {
+            stderr.writefln("error: division by zero");
+            die();
+        }
+        return Value(a.value.as_num % b.value.as_num);
     default:
         stderr.writefln("unsupported operation '%s'", op);
         die();

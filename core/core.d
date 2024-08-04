@@ -63,6 +63,24 @@ Value core_typeof(Value[] args)
     return Value(core_typeof(args[0]));
 }
 
+Value core_copy(Value val)
+{
+    switch (val.type) {
+    case Type.STRUCT:
+        return Value(val.value.as_obj.dup());
+    case Type.ARRAY:
+        return Value((*cast(Value[]*)(&val.value.as_arr)).dup());
+    default:
+        return val;
+    }
+}
+
+Value core_copy(Value[] args)
+{
+    args.length.expect(1, "copy");
+    return core_copy(args[0]);
+}
+
 string core_string(Value val, bool escape = false)
 {
     switch (val.type) {
@@ -147,7 +165,7 @@ Value core_alloc(Value[] args)
 {
     args.length.expect(1, "alloc");
     if (args[0].type != Type.NUMBER) {
-        stderr.writefln("error: 'alloc' expects (number), got (%s)",
+        stderr.writefln("error: 'alloc' expects (Number), got (%s)",
                 core_string(args[0], true));
         die();
     }
@@ -166,7 +184,7 @@ Value core_realloc(Value[] args)
 {
     args.length.expect(2, "realloc");
     if (args[0].type != Type.POINTER || args[1].type != Type.NUMBER) {
-        stderr.writefln("error: 'realloc' expects (pointer, number), got (%s, %s)",
+        stderr.writefln("error: 'realloc' expects (Pointer, Number), got (%s, %s)",
                 core_string(args[0], true), core_string(args[1], true));
         die();
     }
@@ -182,7 +200,7 @@ Value core_free(Value[] args)
 {
     args.length.expect(1, "free");
     if (args[0].type != Type.POINTER) {
-        stderr.writefln("error: 'free' expects (pointer), got (%s)",
+        stderr.writefln("error: 'free' expects (Pointer), got (%s)",
                 core_string(args[0], true));
         die();
     }
@@ -197,7 +215,7 @@ Value core_array_len(Value[] args)
     args.length.expect(1, "len");
     auto arr = args[0];
     if (arr.type != Type.ARRAY && arr.type != Type.STRING) {
-        stderr.writefln("error: 'len' expects (array), got (%s)",
+        stderr.writefln("error: 'len' expects (Array), got (%s)",
                 core_string(arr, true));
         die();
     }
@@ -216,7 +234,7 @@ Value core_array_append(Value[] args)
     if (arr.type == Type.STRING && args[1].type == Type.STRING)
         return core_string_append(arr, args[1]);
     if (arr.type != Type.ARRAY) {
-        stderr.writefln("error: 'append' expects (array, any), got (%s, %s)",
+        stderr.writefln("error: 'append' expects (Array, Any), got (%s, %s)",
                 core_string(arr, true), core_string(args[1], true));
         die();
     }
@@ -236,7 +254,7 @@ Value core_array_insert(Value[] args)
     if (arr.type == Type.STRING && idx.type == Type.NUMBER && val.type == Type.STRING)
         return core_string_insert(arr, idx, val);
     if (arr.type != Type.ARRAY || idx.type != Type.NUMBER) {
-        stderr.writefln("error: 'insert' expects (array, number, any), got (%s, %s, %s)",
+        stderr.writefln("error: 'insert' expects (Array, Number, Any), got (%s, %s, %s)",
                 core_string(arr, true), core_string(idx, true), core_string(val, true));
         die();
     }
@@ -260,13 +278,13 @@ Value core_array_remove(Value[] args)
     if (arr.type == Type.STRING && idx.type == Type.NUMBER)
         return core_string_remove(arr, idx);
     if (arr.type != Type.ARRAY || idx.type != Type.NUMBER) {
-        stderr.writefln("error: 'remove' expects (array, number), got (%s, %s)",
+        stderr.writefln("error: 'remove' expects (Array, Number), got (%s, %s)",
                 core_string(arr, true), core_string(idx, true));
         die();
     }
 
     ulong index = to!ulong(args[1].value.as_num);
-    if (index > arr.value.as_arr.size) {
+    if (index >= arr.value.as_arr.size) {
         stderr.writefln("error: array index out of range");
         die();
     }

@@ -15,6 +15,7 @@ enum ExprType {
     MAKE_ARRAY,
     GET_ARRAY_INDEX,
     SET_ARRAY_INDEX,
+    MAKE_ENUM,
     IF,
     WHILE,
     RETURN,
@@ -207,6 +208,16 @@ class ExprSetArrayAtIndex : Expr
         array = a;
         index = i;
         value = v;
+    }
+}
+
+class ExprMakeEnum : Expr {
+    Expr[] vars;
+
+    this(Loc loc, Expr[] v)
+    {
+        super(loc, ExprType.MAKE_ENUM);
+        vars = v;
     }
 }
 

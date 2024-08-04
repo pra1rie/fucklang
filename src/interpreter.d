@@ -30,6 +30,7 @@ static void loadFuckCore(string[] args)
 
     fuck_core["arguments"] = (args) => Value(fuck_vargs);
     fuck_core["typeof"]    = &core_typeof;
+    fuck_core["copy"]      = &core_copy;
     fuck_core["string"]    = &core_string;
     fuck_core["alloc"]     = &core_alloc;
     fuck_core["realloc"]   = &core_realloc;
@@ -192,6 +193,8 @@ private:
             return doGetArrayAtIndex(cast(ExprGetArrayAtIndex) expr);
         case ExprType.SET_ARRAY_INDEX:
             return doSetArrayAtIndex(cast(ExprSetArrayAtIndex) expr);
+        case ExprType.MAKE_ENUM:
+            return doEnum(cast(ExprMakeEnum) expr);
         case ExprType.IF:
             return doIf(cast(ExprIf) expr);
         case ExprType.WHILE:
@@ -464,6 +467,14 @@ private:
         return Value(s[i] ~ "");
     }
 
+    Value doEnum(ExprMakeEnum expr)
+    {
+        Value res;
+        foreach (var; expr.vars)
+            res = doExpr(var);
+        return res;
+    }
+
     Value doIf(ExprIf expr)
     {
         Value res;
@@ -543,7 +554,7 @@ private:
     // and i use that all the time, so i expect fuck to behave the same.
     Value doBinaryOp(ExprBinaryOp expr)
     {
-        auto maths = ["+", "-", "*", "/"];
+        auto maths = ["+", "-", "*", "/", "%"];
         auto comparison = ["==", "!=", ">", "<", ">=", "<=", "&&", "||"];
         auto a = doExpr(expr.left);
         if (!a.isTrue && expr.op == "&&")

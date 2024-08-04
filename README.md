@@ -16,8 +16,8 @@ $ make
 ```c
 // there are no builtin input/output functions,
 // you have to write your own library if you want that functionality
-// there's an example library in `lib/stdio.c`. build with `./build_stdlib.sh`
-extern "lib/stdio.so" {
+// there's an example library in `lib/stdlib.c`. build with `./build_stdlib.sh`
+extern "lib/stdlib.so" {
     print = fuck_print(_)
 }
 

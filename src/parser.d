@@ -13,7 +13,7 @@ import fuck.core.value;
 
 immutable string[] keywords = [
     "def", "return", "extern", "import", "struct",
-    "if", "else", "while", "break", "next",
+    "if", "else", "while", "break", "next", "enum",
 ];
 
 string[] imported_files;
@@ -80,16 +80,16 @@ void skipSpace(Lexer *lex)
     }
 }
 
-// TODO: '>>', '<<', '%'
+// TODO: '>>', '<<'
 bool isOperator(string s)
 {
     return [
         "(", ")", "{", "}", "[", "]",
         ":", ".", ",", "&", "|", "!", "=",
         ">", "<", "==", "!=", ">=", "<=",
-        "+", "-", "*", "/", "&&", "||",
+        "+", "-", "*", "/", "%", "&&", "||",
 
-        "+=", "-=", "*=", "/=",
+        "+=", "-=", "*=", "/=", "%=",
     ].canFind(s);
 }
 
@@ -263,7 +263,7 @@ Expr parseExpr(Parser *par)
     else
         res = parseBinaryOp(par);
 
-    auto ops = ["+=", "-=", "*=", "/="];
+    auto ops = ["+=", "-=", "*=", "/=", "%="];
     if (par.peek.type == TokenType.OPERATOR && ops.canFind(par.peek.value)) {
         auto loc = par.peek.loc;
         auto op = par.peek.value;
@@ -313,6 +313,8 @@ Expr parseKeyword(Parser *par)
         return parseKeywordBreak(par);
     case "next":
         return parseKeywordNext(par);
+    case "enum":
+        return parseKeywordEnum(par);
     default:
         stderr.writefln("%s: error: unexpected '%s'",
                 par.peek.loc.get, par.peek.value);
@@ -583,6 +585,51 @@ Expr parseKeywordNext(Parser *par)
     return new ExprBreak(loc, true);
 }
 
+Expr parseKeywordEnum(Parser *par) {
+    auto loc = par.peek.loc;
+    par.pos++; // skip 'enum'
+
+    auto end = Token(TokenType.OPERATOR, "}");
+    string[] names;
+    Expr[] vars;
+
+    if (par.peek != Token(TokenType.OPERATOR, "{")) {
+        stderr.writefln("%s: error: expected '{', got '%s'",
+                par.peek.loc.get, par.peek.value);
+        exit(1);
+    }
+    par.pos++; // skip '{'
+
+    uint count = 0;
+    while (par.peek != end) {
+        if (par.peek.type != TokenType.WORD) {
+            stderr.writefln("%s: error: unexpected '%s'",
+                    par.peek.loc.get, par.peek.value);
+            exit(1);
+        }
+        if (names.canFind(par.peek.value)) {
+            stderr.writefln("%s: error: redefinition of field '%s'",
+                    par.peek.loc.get, par.peek.value);
+            exit(1);
+        }
+
+        auto name = par.peek.value;
+        names ~= name;
+        vars ~= new ExprSetVariable(par.peek.loc, name, new ExprLiteral(loc, Value(count)));
+        count++;
+        par.pos++;
+    }
+
+    if (par.peek != end) {
+        stderr.writefln("%s: error: expected '}', got '%s'",
+                par.peek.loc.get, par.peek.value);
+        exit(1);
+    }
+
+    par.pos++; // skip '}'
+    return new ExprMakeEnum(loc, vars);
+}
+
 Expr parseBlock(Parser *par)
 {
     Expr[] block;
@@ -668,7 +715,7 @@ Expr parseAddition(Parser *par)
 Expr parseMultiplication(Parser *par)
 {
     auto loc = par.peek.loc;
-    auto ops = ["*", "/"];
+    auto ops = ["*", "/", "%"];
     string op;
     Expr left = parseFactorExtra(par);
 

@@ -1,0 +1,36 @@
+import "example/stdio.fk"
+
+enum {
+    OP_PUSH
+    OP_PLUS
+    OP_PRINT
+}
+
+def execute(prog) {
+    stack = []
+    i = 0
+    while (i < len(prog)) : (i += 1) {
+        cur = prog[i]
+        if (cur[0] == OP_PUSH) {
+            stack = append(stack, cur[1])
+        } else if (cur[0] == OP_PLUS) {
+            sz = len(stack)
+            a = stack[sz-1]
+            stack = remove(stack, sz-1)
+            stack[sz-2] += a
+        } else if (cur[0] == OP_PRINT) {
+            sz = len(stack)
+            a = stack[sz-1]
+            println(a)
+        }
+    }
+}
+
+prog = [
+    [OP_PUSH, 33],
+    [OP_PUSH, 36],
+    [OP_PLUS],
+    [OP_PRINT],
+]
+
+execute(prog)

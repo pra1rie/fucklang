@@ -16,6 +16,7 @@ enum ExprType {
     GET_ARRAY_INDEX,
     SET_ARRAY_INDEX,
     MAKE_ENUM,
+    CASE,
     IF,
     WHILE,
     RETURN,
@@ -39,6 +40,11 @@ struct ExternFuncAlias {
     string name;
     string func;
     string[] types;
+}
+
+struct Match {
+    Expr match;
+    Expr expr;
 }
 
 class Expr
@@ -218,6 +224,23 @@ class ExprMakeEnum : Expr {
     {
         super(loc, ExprType.MAKE_ENUM);
         vars = v;
+    }
+}
+
+class ExprCase : Expr
+{
+    Expr check;
+    Match[] matches;
+    Expr defalt;
+    bool has_defalt;
+
+    this(Loc loc, Expr c, Match[] m, Expr d, bool h = false)
+    {
+        super(loc, ExprType.CASE);
+        check = c;
+        matches = m;
+        defalt = d;
+        has_defalt = h;
     }
 }
 

@@ -195,6 +195,8 @@ private:
             return doSetArrayAtIndex(cast(ExprSetArrayAtIndex) expr);
         case ExprType.MAKE_ENUM:
             return doEnum(cast(ExprMakeEnum) expr);
+        case ExprType.CASE:
+            return doCase(cast(ExprCase) expr);
         case ExprType.IF:
             return doIf(cast(ExprIf) expr);
         case ExprType.WHILE:
@@ -473,6 +475,18 @@ private:
         foreach (var; expr.vars)
             res = doExpr(var);
         return res;
+    }
+
+    Value doCase(ExprCase expr)
+    {
+        Value check = doExpr(expr.check);
+        foreach (match; expr.matches) {
+            if (check.equals(doExpr(match.match)))
+                return doExpr(match.expr);
+        }
+        if (expr.has_defalt)
+            return doExpr(expr.defalt);
+        return Value(0);
     }
 
     Value doIf(ExprIf expr)

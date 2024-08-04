@@ -13,7 +13,7 @@ import fuck.core.value;
 
 immutable string[] keywords = [
     "def", "return", "extern", "import", "struct",
-    "if", "else", "while", "break", "next", "enum",
+    "if", "else", "while", "break", "next", "enum", "case",
 ];
 
 string[] imported_files;
@@ -84,7 +84,7 @@ void skipSpace(Lexer *lex)
 bool isOperator(string s)
 {
     return [
-        "(", ")", "{", "}", "[", "]",
+        "(", ")", "{", "}", "[", "]", "=>",
         ":", ".", ",", "&", "|", "!", "=",
         ">", "<", "==", "!=", ">=", "<=",
         "+", "-", "*", "/", "%", "&&", "||",
@@ -305,6 +305,8 @@ Expr parseKeyword(Parser *par)
         return parseKeywordReturn(par);
     case "struct":
         return parseKeywordStruct(par);
+    case "case":
+        return parseKeywordCase(par);
     case "if":
         return parseKeywordIf(par);
     case "while":
@@ -538,6 +540,55 @@ Expr[string] parseStructFields(Parser *par)
     return fields;
 }
 
+Expr parseKeywordCase(Parser *par)
+{
+    auto loc = par.peek.loc;
+    par.pos++; // skip 'case'
+    Expr check = parseExpr(par);
+    Match[] matches;
+    Expr defalt;
+    bool has_defalt;
+
+    auto end = Token(TokenType.OPERATOR, "}");
+    if (par.peek != Token(TokenType.OPERATOR, "{")) {
+        stderr.writefln("%s: error: expected '{', got '%s'",
+                par.peek.loc.get, par.peek.value);
+        exit(1);
+    }
+    par.pos++; // skip '{'
+    while (par.inbound && par.peek != end) {
+        if (par.peek == Token(TokenType.KEYWORD, "else")) {
+            if (par.peek(1) != Token(TokenType.OPERATOR, "=>")) {
+                stderr.writefln("%s: error: expected '=>', got '%s'",
+                        par.peek.loc.get, par.peek.value);
+                exit(1);
+            }
+            par.pos += 2; // skip 'else =>'
+            defalt = parseExpr(par);
+            has_defalt = true;
+            break;
+        }
+        Match match;
+        match.match = parseExpr(par);
+        if (par.peek != Token(TokenType.OPERATOR, "=>")) {
+            stderr.writefln("%s: error: expected '=>', got '%s'",
+                    par.peek.loc.get, par.peek.value);
+            exit(1);
+        }
+        par.pos++; // skip '=>'
+        match.expr = parseExpr(par);
+        matches ~= match;
+    }
+
+    if (!par.inbound || par.peek != end) {
+        stderr.writefln("%s: error: missing '}'", loc.get);
+        exit(1);
+    }
+    par.pos++; // skip '}'
+
+    return new ExprCase(loc, check, matches, defalt, has_defalt);
+}
+
 Expr parseKeywordIf(Parser *par)
 {
     auto loc = par.peek.loc;
@@ -601,7 +652,7 @@ Expr parseKeywordEnum(Parser *par) {
     par.pos++; // skip '{'
 
     uint count = 0;
-    while (par.peek != end) {
+    while (par.inbound && par.peek != end) {
         if (par.peek.type != TokenType.WORD) {
             stderr.writefln("%s: error: unexpected '%s'",
                     par.peek.loc.get, par.peek.value);
@@ -620,9 +671,8 @@ Expr parseKeywordEnum(Parser *par) {
         par.pos++;
     }
 
-    if (par.peek != end) {
-        stderr.writefln("%s: error: expected '}', got '%s'",
-                par.peek.loc.get, par.peek.value);
+    if (!par.inbound || par.peek != end) {
+        stderr.writefln("%s: error: missing '}'", loc.get);
         exit(1);
     }
 
@@ -643,6 +693,7 @@ Expr parseBlock(Parser *par)
 
     if (!par.inbound || par.peek != end) {
         stderr.writefln("%s: error: missing '}'", loc.get);
+        exit(1);
     }
 
     par.pos++; // skip '}'

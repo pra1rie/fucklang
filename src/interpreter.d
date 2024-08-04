@@ -266,7 +266,7 @@ private:
         // make a copy if assigning to struct
         value = (value.type == Type.STRUCT)? Value(value.value.as_obj.dup()) : value;
         // global variables aaaaaaaaaaaaaaaaaaaaa
-        if (expr.name in global.vars) global.vars[expr.name] = value;
+        /* if (expr.name in global.vars) global.vars[expr.name] = value; */
         currentScope.vars[expr.name] = value;
         return value;
     }

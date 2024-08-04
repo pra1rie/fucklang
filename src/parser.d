@@ -239,6 +239,7 @@ string getFileFromPath(string path)
 
     stderr.writefln("error: could not read file '%s'", path);
     exit(1);
+    assert(0); // make the compiler shut the fuck up
 }
 
 Expr[] parseFile(string path)
@@ -850,6 +851,7 @@ Expr parseFactor(Parser *par)
     stderr.writefln("%s: error: unexpected '%s'",
             par.peek.loc.get, par.peek.value);
     exit(1);
+    assert(0); // make the compiler shut the fuck up
 }
 
 Expr parseNumber(Parser *par)

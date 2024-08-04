@@ -6,6 +6,8 @@ enum {
     OP_PRINT
 }
 
+struct Inst { type op }
+
 struct VM {
     stack = []
     ip = 0
@@ -27,27 +29,20 @@ def execute(prog) {
 
     while (vm.ip < len(prog)) : (vm.ip += 1) {
         inst = prog[vm.ip]
-        case (inst[0]) {
-            OP_PUSH => vm.push(inst[1])
-            OP_PLUS => {
-                a = vm.pop()
-                b = vm.pop()
-                vm.push(a + b)
-            }
-            OP_PRINT => {
-                a = vm.pop()
-                println(a)
-            }
-            else => println("unknown instruction")
+        case (inst.type) {
+            OP_PUSH  => vm.push(inst.op)
+            OP_PLUS  => vm.push(vm.pop() + vm.pop())
+            OP_PRINT => println(vm.pop())
+            else     => println("unknown instruction")
         }
     }
 }
 
 prog = [
-    [OP_PUSH, 33],
-    [OP_PUSH, 36],
-    [OP_PLUS],
-    [OP_PRINT],
+    Inst(OP_PUSH, 33),
+    Inst(OP_PUSH, 36),
+    Inst(OP_PLUS),
+    Inst(OP_PRINT),
 ]
 
 execute(prog)

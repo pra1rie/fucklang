@@ -264,10 +264,10 @@ private:
     {
         Value value = doExpr(expr.value);
         // make a copy if assigning to struct
-        if (value.type == Type.STRUCT)
-            currentScope.vars[expr.name] = Value(value.value.as_obj.dup());
-        else
-            currentScope.vars[expr.name] = value;
+        value = (value.type == Type.STRUCT)? Value(value.value.as_obj.dup()) : value;
+        // global variables aaaaaaaaaaaaaaaaaaaaa
+        if (expr.name in global.vars) global.vars[expr.name] = value;
+        currentScope.vars[expr.name] = value;
         return value;
     }
 

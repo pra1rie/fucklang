@@ -566,7 +566,7 @@ Expr parseKeywordCase(Parser *par)
             par.pos += 2; // skip 'else =>'
             defalt = parseExpr(par);
             has_defalt = true;
-            break;
+            continue;
         }
         Match match;
         match.match = parseExpr(par);

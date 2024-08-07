@@ -112,10 +112,10 @@ struct Interpreter {
 
     Value getVariable(Loc loc, string name)
     {
-        if (name in global.vars)
-            return global.vars[name];
-        else if (name in currentScope.vars)
+        if (name in currentScope.vars)
             return currentScope.vars[name];
+        else if (name in global.vars)
+            return global.vars[name];
 
         stderr.writefln("%s: error: variable '%s' does not exist", loc.get, name);
         die();

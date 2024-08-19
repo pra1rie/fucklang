@@ -1,7 +1,7 @@
 import "example/stdio.fk"
 
 enum {
-    OP_PUSH
+    OP_PUSH = 1
     OP_PLUS
     OP_PRINT
 }

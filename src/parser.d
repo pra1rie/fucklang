@@ -665,11 +665,28 @@ Expr parseKeywordEnum(Parser *par) {
             exit(1);
         }
 
+        loc = par.peek.loc;
         auto name = par.peek.value;
         names ~= name;
-        vars ~= new ExprSetVariable(par.peek.loc, name, new ExprLiteral(loc, Value(count)));
+
+        Expr curr = new ExprLiteral(loc, Value(count));
         count++;
+
         par.pos++;
+        if (par.peek == Token(TokenType.OPERATOR, "=")) {
+            par.pos++;
+            // can only have number literals here coz im lazy
+            // and don't wanna have to deal with this bullshit
+            curr = parseFactorExtra(par);
+            auto lit = cast(ExprLiteral) curr;
+            if (curr.type != ExprType.LITERAL || lit.value.type != Type.NUMBER) {
+                stderr.writefln("%s: error: expected number literal", loc.get);
+                exit(1);
+            }
+            count += lit.value.value.as_num.to!uint;
+        }
+        auto var = new ExprSetVariable(loc, name, curr);
+        vars ~= var;
     }
 
     if (!par.inbound || par.peek != end) {

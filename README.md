@@ -1,6 +1,7 @@
 # FuckLang
 dumb little scripting language written in D.
 my plan is to use it to write its own compiler.
+don't bother using it.
 
 ## Requirements
 - [A sane D compiler](https://dlang.org)
@@ -21,5 +22,5 @@ extern "lib/stdlib.so" {
     print = fuck_print(_)
 }
 
-println("Hello, World!\n")
+print("Hello, World!\n")
 ```

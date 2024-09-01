@@ -112,13 +112,15 @@ class ExprMakeFunction : Expr
     string name;
     string[] args;
     Expr expr;
+    bool varg;
 
-    this(Loc loc, string n, string[] a, Expr e)
+    this(Loc loc, string n, string[] a, Expr e, bool v = false)
     {
         super(loc, ExprType.MAKE_FUNCTION);
         name = n;
         args = a;
         expr = e;
+        varg = v;
     }
 }
 

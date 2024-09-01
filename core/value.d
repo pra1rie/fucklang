@@ -70,6 +70,7 @@ struct ValueFunction {
     // TODO: maybe also store their types
     string[] args;
     Expr expr;
+    bool varg;
 }
 
 struct Value {

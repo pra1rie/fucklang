@@ -394,9 +394,10 @@ Expr parseKeywordDef(Parser *par)
         name = par.consume(TokenType.WORD).value;
 
     string[] args = parseFunctionArgs(par);
+    bool varg = (args.length && args[$-1] == "_");
     Expr expr = parseExpr(par);
 
-    return new ExprMakeFunction(loc, name, args, expr);
+    return new ExprMakeFunction(loc, name, args, expr, varg);
 }
 
 Expr parseKeywordExtern(Parser *par)

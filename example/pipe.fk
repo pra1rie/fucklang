@@ -1,0 +1,22 @@
+import "example/stdio.fk"
+
+def join(arr, str) {
+    res = ""
+    i = 0
+    while (i < len(arr)) : (i += 1) {
+        // '|>' basically inserts the expression on the left
+        // as the first argument of the function on the right.
+        // 'a |> b(c)' is the same as 'b(a, c)'.
+        // which is equivalent to 'a.b(c)' in the good languages
+        res = res |> string(if (i > 0) str else "", arr[i])
+    }
+    return res
+}
+
+// functions with '_' as its last argument don't throw an error when
+// the number of arguments don't match. it assumes you want to use the
+// variable argument list (va_list) to operate on the values passed in.
+def my_println(_) va_list |> join(" ") |> print("\nnewline\n")
+// same as: def my_println(_) print(join(va_list, " "), "\nnewline\n")
+
+my_println("Hello,", "World!")

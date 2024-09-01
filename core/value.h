@@ -29,6 +29,7 @@ typedef struct value_array_t {
 typedef struct value_function_t {
     void *args;
     void *expr;
+    bool varg;
     size_t padding; // lmfao
 } ValueFunction;
 

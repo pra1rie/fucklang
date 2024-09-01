@@ -84,7 +84,7 @@ void skipSpace(Lexer *lex)
 bool isOperator(string s)
 {
     return [
-        "(", ")", "{", "}", "[", "]", "=>",
+        "(", ")", "{", "}", "[", "]", "=>", "|>",
         ":", ".", ",", "&", "|", "!", "=",
         ">", "<", "==", "!=", ">=", "<=",
         "+", "-", "*", "/", "%", "&&", "||",
@@ -786,17 +786,35 @@ Expr parseMultiplication(Parser *par)
     auto loc = par.peek.loc;
     auto ops = ["*", "/", "%"];
     string op;
-    Expr left = parseFactorExtra(par);
+    Expr left = parseFactorPipe(par);
 
     while (par.peek.type == TokenType.OPERATOR && ops.canFind(par.peek.value)) {
         op = par.peek.value;
         par.pos++;
 
-        Expr right = parseFactorExtra(par);
+        Expr right = parseFactorPipe(par);
         left = new ExprBinaryOp(loc, op, left, right);
     }
 
     return left;
+}
+
+Expr parseFactorPipe(Parser *par)
+{
+    auto expr = parseFactorExtra(par);
+
+    while (par.peek == Token(TokenType.OPERATOR, "|>")) {
+        auto loc = par.peek.loc;
+        par.pos++; // skip '|>'
+        auto func = parseFactorExtra(par);
+        if (func.type != ExprType.CALL_FUNCTION) {
+            stderr.writefln("%s: error: unexpected '|>'", loc.get);
+            exit(1);
+        }
+        (cast(ExprCallFunction)func).args = expr ~ (cast(ExprCallFunction)func).args;
+        expr = func;
+    }
+    return expr;
 }
 
 Expr parseFactorExtra(Parser *par)

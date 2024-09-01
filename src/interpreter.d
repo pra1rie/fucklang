@@ -125,15 +125,17 @@ struct Interpreter {
     Value execFunction(string name, ValueFunction func, Value[] args)
     {
         scopes ~= Scope(name);
-
-        if (!func.varg && func.args.length != args.length) {
+        auto al = args.length, fl = func.args.length;
+        fl = (func.varg)? fl-1 : fl;
+        if (al < fl || (!func.varg && fl > al)) {
             auto nargs = (func.args.length == 1)? "argument" : "arguments";
             stderr.writefln("%s: error: function '%s' expects %d %s, got %d",
-                    func.expr.loc.get, name, func.args.length, nargs, args.length);
+                    func.expr.loc.get, name, fl, nargs, al);
             die();
         }
+
         currentScope.vars = lastScope.vars.dup;
-        for (int i = 0; i < func.args.length; ++i)
+        for (int i = 0; i < fl; ++i)
             currentScope.vars[func.args[i]] = args[i];
         currentScope.vars["va_list"] = Value(args);
 

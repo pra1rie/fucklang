@@ -57,8 +57,7 @@ void skipSpace(Lexer *lex)
 {
     // skip whitespace
     while (lex.inbound && lex.current.isWhite) {
-        if (lex.current == '\n')
-            lex.loc.line++;
+        if (lex.current == '\n') lex.loc.line++;
         lex.pos++;
     }
 
@@ -71,8 +70,7 @@ void skipSpace(Lexer *lex)
     // skip multi-line comments
     if (lex.pos + 1 < lex.text.length && lex.text[lex.pos..lex.pos+2] == "/*") {
         while (lex.pos + 2 < lex.text.length && lex.text[lex.pos..lex.pos+2] != "*/") {
-            if (lex.current == '\n')
-                lex.loc.line++;
+            if (lex.current == '\n') lex.loc.line++;
             lex.pos++;
         }
         lex.pos += 2; // skip '*/'
@@ -150,7 +148,7 @@ Token nextToken(Lexer *lex)
     }
 
     if (lex.current.isAlpha || lex.current == '_') {
-        while (lex.inbound && lex.current.isAlphaNum || lex.current == '_') {
+        while (lex.inbound && (lex.current.isAlphaNum || lex.current == '_')) {
             tok.value ~= lex.current;
             lex.pos++;
         }
